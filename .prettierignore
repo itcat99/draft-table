@@ -1,0 +1,11 @@
+# Dir
+node_modules
+packages/*/lib
+example
+
+# file
+*.lock
+*.html
+*.hbs
+.*
+gitignore
