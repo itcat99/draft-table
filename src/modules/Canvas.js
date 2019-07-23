@@ -79,7 +79,7 @@ class Canvas {
 
     this.ctx.beginPath();
     lines.forEach(line => {
-      const { from, to } = line;
+      const { from, to } = line.get();
       this.ctx.moveTo(...from);
       this.ctx.lineTo(...to);
     });
@@ -97,7 +97,7 @@ class Canvas {
     if (!rects.length) return false;
 
     rects.forEach(rect => {
-      const { pos, width, height } = rect;
+      const { pos, width, height } = rect.get();
       this.ctx.fillRect(...pos, width, height);
     });
 
@@ -113,7 +113,7 @@ class Canvas {
     if (!texts.length) return false;
 
     texts.forEach(text => {
-      const { pos, value } = text;
+      const { pos, value } = text.get();
       this.ctx.fillText(value, ...pos);
     });
 
