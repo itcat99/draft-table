@@ -28,6 +28,7 @@ class DraftTable {
 
     this.ctx = this.canvas.ctx;
     this.el = this.canvas.el;
+    console.log(this.el);
 
     // // 绘制线段
     // this.canvas.drawLine([{ from: [0, 0], to: [100, 100] }, { from: [100, 100], to: [200, 0] }]);
@@ -39,7 +40,7 @@ class DraftTable {
 
   test = () => {
     this.canvas.ctx.clearRect(0, 0, 800, 600);
-    const texts = [];
+    this.texts = [];
 
     for (let i = 0; i < 1000; i++) {
       const text = new Text("Hello", {
@@ -49,32 +50,48 @@ class DraftTable {
         ],
       });
 
-      texts.push(text);
+      this.texts.push(text);
     }
 
     // console.log("texts: ", texts);
-    this.canvas.drawText(texts);
+    this.canvas.drawText(this.texts);
   };
 
   listener() {
-    window.onwheel = () => {
+    this.el.onwheel = () => {
       window.requestAnimationFrame(this.test);
     };
+
+    this.canvas.on("beforeCreate", canvas => {
+      console.log("canvas: ", canvas);
+    });
+    this.canvas.on("click", e => {
+      console.log("on click", e);
+    });
   }
 
   /* public methods */
 
-  // with add
+  // about add/del
   addRow() {}
+  delRow() {}
   getRow() {}
+
   addCol() {}
+  delCol() {}
   getCol() {}
+
   addCell() {}
+  delCell() {}
   getCell() {}
+
+  // about visibility
   hiddenRow() {}
   showRow() {}
   haddenCol() {}
   showCol() {}
+
+  // about merge
   mergeCell() {}
   brokeMergeCell() {}
   mergeRow() {}

@@ -5,7 +5,7 @@ const htmlPlugin = require("html-webpack-plugin");
 const src = path.resolve(__dirname, "src");
 const output = path.resolve(__dirname, "dist");
 
-const entry = path.join(src, "index.js");
+const entry = path.join(src, "index.ts");
 
 module.exports = {
   mode: "development",
@@ -18,10 +18,17 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /\.ts?$/,
+        loader: "awesome-typescript-loader",
+      },
+      {
         test: /\.js?$/,
         loader: "babel-loader",
       },
     ],
+  },
+  resolve: {
+    extensions: [".ts", ".js", ".json"],
   },
   devServer: {
     hot: true,

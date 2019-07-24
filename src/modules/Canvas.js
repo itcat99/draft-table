@@ -1,10 +1,30 @@
 import { isCanvas } from "../helpers/is";
+import Component from "./Component";
 
-class Canvas {
+const _EVENTS = {
+  beforeCreate() {},
+  didCreate() {},
+  beforeUpdate() {},
+  didUpdate() {},
+  beforeDrawLine() {},
+  didDrawLine() {},
+  beforeDrawText() {},
+  didDrawText() {},
+  beforeDrawRect() {},
+  didDrawRect() {},
+  beforeClear() {},
+  didClear() {},
+  click() {},
+};
+const PROPS = {};
+
+class Canvas extends Component {
   constructor(props) {
-    this.props = props;
+    super(props);
+    this.props = Object.assign({}, PROPS, props);
 
     this.initialized();
+    this.listener();
   }
 
   /**
@@ -13,6 +33,7 @@ class Canvas {
    * 2. 格式化ctx的各项属性
    */
   initialized() {
+    this.fire("beforeCreate", this);
     const { width, height, viewWidth, viewHeight, target, ratio, ...styles } = this.props;
 
     if (isCanvas(target)) {
@@ -57,6 +78,12 @@ class Canvas {
 
       this.setAttrs({ font, ...args }, this.ctx);
     }
+  }
+
+  listener() {
+    this.el.addEventListener("click", e => {
+      this.fire("click", e);
+    });
   }
 
   setAttrs(props, ctx) {
