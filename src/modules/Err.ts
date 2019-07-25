@@ -1,12 +1,12 @@
-interface ErrIF {
+interface Err_I {
   pop(msg: string): void;
 }
 
-class Err implements ErrIF {
+class Err implements Err_I {
   pop(msg: string) {
     throw new Error(msg);
   }
 }
 
-export { ErrIF };
+export { Err_I };
 export default Err;

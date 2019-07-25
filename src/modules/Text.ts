@@ -1,7 +1,8 @@
+import { Pos_Type } from "../types/common.type";
 import Component from "./Component";
 
 interface Props_I {
-  pos: Pos;
+  pos: Pos_Type;
   value: string;
 }
 

@@ -1,5 +1,4 @@
 const path = require("path");
-const webpack = require("webpack");
 const htmlPlugin = require("html-webpack-plugin");
 
 // const src = path.resolve(__dirname, "src");
@@ -9,7 +8,7 @@ const output = path.resolve(__dirname, "dist");
 // const entry = path.resolve(__dirname, "examples", "index.js")
 const entry = path.resolve(__dirname, "test.ts");
 module.exports = {
-  mode: "development",
+  mode: "production",
   entry,
   output: {
     filename: "[name].[hash].js",
@@ -31,9 +30,5 @@ module.exports = {
   resolve: {
     extensions: [".ts", ".js", ".json"],
   },
-  devServer: {
-    hot: true,
-    contentBase: output,
-  },
-  plugins: [new htmlPlugin(), new webpack.HotModuleReplacementPlugin()],
+  plugins: [new htmlPlugin()],
 };
