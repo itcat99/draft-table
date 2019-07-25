@@ -34,7 +34,7 @@ export interface Config_I {
   fontFamily: string;
   lineHeight: number; // 字体的行高
   lineWidth: number; // 线的宽度
-  textAlign: TextAlignEnum;
-  textBaseline: TextBaselineEnum;
+  textAlign: TextAlign_Enum;
+  textBaseline: TextBaseline_Enum;
   plugins?: Plugin_Collection_I;
 }

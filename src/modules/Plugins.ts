@@ -3,7 +3,7 @@ import Emitter from "./Emitter";
 import Err from "./Err";
 
 class Plugins {
-  public plugins: Map<string, Plugin_I>;
+  private _plugins: Map<string, Plugin_I>;
   private _err: Err;
 
   /**
@@ -14,7 +14,7 @@ class Plugins {
    * @memberof Plugins
    */
   constructor(public emitter: Emitter) {
-    this.plugins = new Map();
+    this._plugins = new Map();
     this._err = new Err();
   }
 
@@ -28,9 +28,22 @@ class Plugins {
    * @memberof Plugins
    */
   register(name: string, fn: Plugin_I) {
-    if (this.plugins.has(name)) this._err.pop(`Has the same namespace Plugin : [${name}]`);
+    if (this._plugins.has(name)) this._err.pop(`Has the same namespace Plugin : [${name}]`);
 
-    this.plugins.set(name, fn);
+    this._plugins.set(name, fn);
+    this.emitter.fire("_PLUGINS_::registered", name);
+  }
+
+  /**
+   * 删除插件，请确保在删除之前处理好该插件所有的事务！
+   *
+   * @author FreMaNgo
+   * @date 2019-07-26
+   * @param {string} name 插件名称
+   * @memberof Plugins
+   */
+  del(name: string) {
+    this._plugins.delete(name);
   }
 
   /**
@@ -43,7 +56,7 @@ class Plugins {
    * @memberof Plugins
    */
   get(name: string): Plugin_I {
-    return this.plugins.get(name);
+    return this._plugins.get(name);
   }
 
   /**
@@ -58,7 +71,7 @@ class Plugins {
   getAll(): Plugin_Collection_I {
     const result: Plugin_Collection_I = {};
 
-    this.plugins.forEach((plugin, key) => {
+    this._plugins.forEach((plugin, key) => {
       result[key] = plugin;
     });
 
@@ -75,7 +88,7 @@ class Plugins {
    * @memberof Plugins
    */
   run(name: string, ...props: any[]) {
-    const plugin = this.plugins.get(name);
+    const plugin = this._plugins.get(name);
 
     plugin && plugin(...props);
   }
@@ -89,7 +102,7 @@ class Plugins {
    * @memberof Plugins
    */
   runAll(...props: any[]) {
-    this.plugins.forEach((plugin, name) => {
+    this._plugins.forEach((plugin, name) => {
       plugin(...props);
     });
   }

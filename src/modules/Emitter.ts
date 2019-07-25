@@ -101,7 +101,6 @@ class Emitter {
 
     if (event) {
       const { type, fn } = event;
-
       switch (type) {
         case EventType_Enum.ON:
           fn && fn(...props);

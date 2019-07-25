@@ -6,8 +6,8 @@ const htmlPlugin = require("html-webpack-plugin");
 const output = path.resolve(__dirname, "dist");
 
 // const entry = path.join(src, "index.ts");
-// const entry = path.resolve(__dirname, "examples", "index.js")
-const entry = path.resolve(__dirname, "test.ts");
+const entry = path.resolve(__dirname, "examples", "index.js");
+// const entry = path.resolve(__dirname, "test.ts");
 module.exports = {
   mode: "development",
   entry,
