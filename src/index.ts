@@ -1,106 +1,112 @@
-import config from "./config";
-import Canvas from "./modules/Canvas";
-import Text from "./modules/Text";
+import _Plugin from "./modules/Plugin";
+import Core from "./modules/Core";
 
-class DraftTable {
-  constructor(props) {
-    const opts = Object.assign({}, config, props);
-    const { ratio, width: viewWidth, height: viewHeight } = opts;
-    const width = viewWidth * ratio;
-    const height = viewHeight * ratio;
+export const Plugin = _Plugin;
+export default Core;
 
-    this.props = Object.assign({}, opts, {
-      width,
-      height,
-      // 显示在页面上实际的大小
-      viewWidth,
-      viewHeight,
-    });
+// import config from "./config";
+// import Canvas from "./modules/Canvas";
+// import Text from "./modules/Text";
 
-    console.log("this.props: ", this.props);
+// class DraftTable {
+//   constructor(props) {
+//     const opts = Object.assign({}, config, props);
+//     const { ratio, width: viewWidth, height: viewHeight } = opts;
+//     const width = viewWidth * ratio;
+//     const height = viewHeight * ratio;
 
-    this.initialized();
-    this.listener();
-  }
+//     this.props = Object.assign({}, opts, {
+//       width,
+//       height,
+//       // 显示在页面上实际的大小
+//       viewWidth,
+//       viewHeight,
+//     });
 
-  initialized() {
-    this.canvas = new Canvas(this.props);
+//     console.log("this.props: ", this.props);
 
-    this.ctx = this.canvas.ctx;
-    this.el = this.canvas.el;
-    console.log(this.el);
+//     this.initialized();
+//     this.listener();
+//   }
 
-    // // 绘制线段
-    // this.canvas.drawLine([{ from: [0, 0], to: [100, 100] }, { from: [100, 100], to: [200, 0] }]);
-    // // 绘制矩形
-    // this.canvas.drawRect([{ pos: [10, 10], width: 100, height: 100 }]);
-    // // 绘制文字
-    // this.canvas.drawText([{ pos: [100, 200], value: "Hello World." }]);
-  }
+//   initialized() {
+//     this.canvas = new Canvas(this.props);
 
-  test = () => {
-    this.canvas.ctx.clearRect(0, 0, 800, 600);
-    this.texts = [];
+//     this.ctx = this.canvas.ctx;
+//     this.el = this.canvas.el;
+//     console.log(this.el);
 
-    for (let i = 0; i < 1000; i++) {
-      const text = new Text("Hello", {
-        pos: [
-          Math.floor(Math.random() * this.props.viewWidth),
-          Math.floor(Math.random() * this.props.viewHeight),
-        ],
-      });
+//     // // 绘制线段
+//     // this.canvas.drawLine([{ from: [0, 0], to: [100, 100] }, { from: [100, 100], to: [200, 0] }]);
+//     // // 绘制矩形
+//     // this.canvas.drawRect([{ pos: [10, 10], width: 100, height: 100 }]);
+//     // // 绘制文字
+//     // this.canvas.drawText([{ pos: [100, 200], value: "Hello World." }]);
+//   }
 
-      this.texts.push(text);
-    }
+//   test = () => {
+//     this.canvas.ctx.clearRect(0, 0, 800, 600);
+//     this.texts = [];
 
-    // console.log("texts: ", texts);
-    this.canvas.drawText(this.texts);
-  };
+//     for (let i = 0; i < 1000; i++) {
+//       const text = new Text("Hello", {
+//         pos: [
+//           Math.floor(Math.random() * this.props.viewWidth),
+//           Math.floor(Math.random() * this.props.viewHeight),
+//         ],
+//       });
 
-  listener() {
-    this.el.onwheel = () => {
-      window.requestAnimationFrame(this.test);
-    };
+//       this.texts.push(text);
+//     }
 
-    this.canvas.on("beforeCreate", canvas => {
-      console.log("canvas: ", canvas);
-    });
-    this.canvas.on("click", e => {
-      console.log("on click", e);
-    });
-  }
+//     // console.log("texts: ", texts);
+//     this.canvas.drawText(this.texts);
+//   };
 
-  /* public methods */
+//   listener() {
+//     this.el.onwheel = () => {
+//       window.requestAnimationFrame(this.test);
+//     };
 
-  // about add/del
-  addRow() {}
-  delRow() {}
-  getRow() {}
+//     this.canvas.on("beforeCreate", canvas => {
+//       console.log("canvas: ", canvas);
+//     });
+//     this.canvas.on("click", e => {
+//       console.log("on click", e);
+//     });
+//   }
 
-  addCol() {}
-  delCol() {}
-  getCol() {}
+//   /* public methods */
 
-  addCell() {}
-  delCell() {}
-  getCell() {}
+//   // about add/del
+//   addRow() {}
+//   delRow() {}
+//   getRow() {}
 
-  // about visibility
-  hiddenRow() {}
-  showRow() {}
-  haddenCol() {}
-  showCol() {}
+//   addCol() {}
+//   delCol() {}
+//   getCol() {}
 
-  // about merge
-  mergeCell() {}
-  brokeMergeCell() {}
-  mergeRow() {}
-  brokeMergeRow() {}
-  mergeCol() {}
-  brokeMergeCol() {}
+//   addCell() {}
+//   delCell() {}
+//   getCell() {}
 
-  /* events */
-  onClick() {}
-}
+//   // about visibility
+//   hiddenRow() {}
+//   showRow() {}
+//   haddenCol() {}
+//   showCol() {}
 
-export default DraftTable;
+//   // about merge
+//   mergeCell() {}
+//   brokeMergeCell() {}
+//   mergeRow() {}
+//   brokeMergeRow() {}
+//   mergeCol() {}
+//   brokeMergeCol() {}
+
+//   /* events */
+//   onClick() {}
+// }
+
+// export default DraftTable;

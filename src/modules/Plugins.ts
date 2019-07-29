@@ -1,6 +1,11 @@
-import { Plugin_I, Plugin_Collection_I } from "../types/plugin.type";
+import { Plugin_I, Plugin_Collection_I, RegisterOptions_I } from "../types/plugin.type";
 import Emitter from "./Emitter";
 import Err from "./Err";
+import Plugin from "./Plugin";
+
+const DEFAULT_REGISTER_OPTS: RegisterOptions_I = {
+  auto: false,
+};
 
 class Plugins {
   private _plugins: Map<string, Plugin_I>;
@@ -27,11 +32,23 @@ class Plugins {
    * @param {Plugin_I} fn 插件函数，插件的逻辑写在这里面
    * @memberof Plugins
    */
-  register(name: string, fn: Plugin_I) {
+  register(
+    name: string,
+    plugin: typeof Plugin,
+    defaultProps?: object,
+    options?: RegisterOptions_I,
+  ) {
     if (this._plugins.has(name)) this._err.pop(`Has the same namespace Plugin : [${name}]`);
 
-    this._plugins.set(name, fn);
-    this.emitter.fire("_PLUGINS_::registered", [name]);
+    const opts = Object.assign({}, DEFAULT_REGISTER_OPTS, options);
+
+    this._plugins.set(name, {
+      class: plugin,
+      defaultProps,
+      options: opts,
+    });
+
+    this.emitter.fire("registered", [name], "_PLUGINS_");
   }
 
   /**
@@ -79,32 +96,41 @@ class Plugins {
   }
 
   /**
-   * 执行指定插件
+   *  执行指定插件
    *
    * @author FreMaNgo
-   * @date 2019-07-25
+   * @date 2019-07-29
    * @param {string} name 插件名
-   * @param {...any[]} props 传递给插件函数的参数列表
+   * @param {object} props 传递给插件函数的参数对象
+   * @returns {(Plugin | void)} 当前插件的实例
    * @memberof Plugins
    */
-  run(name: string, ...props: any[]) {
-    const plugin = this._plugins.get(name);
+  run(name: string, props: object): Plugin | void {
+    const _plugin = this._plugins.get(name);
 
-    plugin && plugin(...props);
+    if (_plugin) {
+      const { defaultProps, class: _class } = _plugin;
+
+      return new _class({}, Object.assign({}, defaultProps, props));
+    }
   }
 
   /**
    * 按注册顺序执行所有插件
    *
    * @author FreMaNgo
-   * @date 2019-07-25
-   * @param {...any[]} props 传递给插件函数的参数列表
+   * @date 2019-07-29
+   * @param {object} props 传递给插件函数的参数对象
+   * @returns {(Plugin[] | void)} plugin的实例集合
    * @memberof Plugins
    */
-  runAll(...props: any[]) {
-    this._plugins.forEach(plugin => {
-      plugin(...props);
+  runAll(props: object): Plugin[] | void {
+    const instances = [];
+    this._plugins.forEach((plugin, namespace) => {
+      instances.push(this.run(namespace, props));
     });
+
+    if (instances.length > 0) return instances;
   }
 }
 

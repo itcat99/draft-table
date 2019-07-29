@@ -1,21 +1,27 @@
 import { Config_I } from "../types/common.type";
 import Emitter from "./Emitter";
 import Plugins from "./Plugins";
-import Config from "../config";
+import Plugin from "./Plugin";
+import Err from "./Err";
+import DEFAULT_PROPS from "../config";
 
 /* inside Plugins */
 import canvas from "../Plugins/Canvas";
 import { Plugin_I } from "../types/plugin.type";
 
 class Core {
-  public emitter: Emitter;
+  public COLLECTIONS: any;
+  public STORE: any;
+  public EMITTER: Emitter;
+  public PLUGINS: Plugins;
+  public ERR: Err;
+
   public events: Map<string, any>;
-  public plugins: Plugins;
   public config: Config_I;
   public fn: any;
 
   /**
-   * 初始化：emitter,plugins,collection,store
+   * 初始化：emitter,plugins,collection,store,err
    * 注册全局监听
    * @author FreMaNgo
    * @date 2019-07-29
@@ -23,28 +29,23 @@ class Core {
    * @memberof Core
    */
   constructor(props: Config_I) {
-    this.emitter = new Emitter();
-    this.plugins = new Plugins(this.emitter);
+    this.EMITTER = new Emitter();
+    this.PLUGINS = new Plugins(this.EMITTER);
 
     const InsidePlugins = { canvas };
 
-    this.config = Object.assign({}, Config, props, {
-      plugins: {
-        ...InsidePlugins,
-        ...props.plugins,
-      },
-    });
+    this.config = Object.assign({}, DEFAULT_PROPS, props);
 
-    this.listener();
-    this.registerPlugins();
-    this.initiailzed();
+    // this.listener();
+    // this.registerPlugins();
+    // this.initiailzed();
   }
 
   registerPlugins() {
     const { plugins } = this.config;
 
     for (const name of Object.keys(plugins)) {
-      this.plugins.register(name, plugins[name]);
+      this.PLUGINS.register(name, plugins[name]);
     }
   }
 
@@ -63,41 +64,41 @@ class Core {
     const { plugins } = this.config;
 
     for (const name of Object.keys(plugins)) {
-      this.plugins.register(name, plugins[name]);
+      this.PLUGINS.register(name, plugins[name]);
     }
 
-    const allPlugins = this.plugins.getAll();
+    const allPlugins = this.PLUGINS.getAll();
     for (const name of Object.keys(allPlugins)) {
-      this.plugins.run(name, {
+      this.PLUGINS.run(name, {
         app: this,
         emitter: this.getOnwerEmitter(name),
-        plugins: this.plugins,
+        plugins: this.PLUGINS,
       });
     }
   }
 
   listener() {
-    this.emitter.on("_PLUGINS_::registered", (name: string) => {
-      this.fn[name] = this.plugins.get(name);
+    this.EMITTER.on("_PLUGINS_::registered", (name: string) => {
+      this.fn[name] = this.PLUGINS.get(name);
     });
   }
 
   private getOnwerEmitter(name: string) {
     return {
-      events: this.emitter.events,
-      on: this.emitter.on.bind(this.emitter),
-      once: this.emitter.once.bind(this.emitter),
+      events: this.EMITTER.events,
+      on: this.EMITTER.on.bind(this.EMITTER),
+      once: this.EMITTER.once.bind(this.EMITTER),
       fire: (key: string, ...props: any[]) =>
-        this.emitter.fire.call(this.emitter, `${name}::${key}`, ...props),
-      del: this.emitter.del.bind(this.emitter),
-      clear: this.emitter.clear.bind(this.emitter),
+        this.EMITTER.fire.call(this.EMITTER, `${name}::${key}`, ...props),
+      del: this.EMITTER.del.bind(this.EMITTER),
+      clear: this.EMITTER.clear.bind(this.EMITTER),
     };
   }
 
   registerPlugin(key: string, plugin: Plugin_I, auto: boolean) {
-    this.plugins.register(key, plugin);
+    this.PLUGINS.register(key, plugin);
 
-    auto && this.plugins.run(key);
+    auto && this.PLUGINS.run(key);
   }
 
   /**
@@ -110,8 +111,8 @@ class Core {
    * @memberof Core
    */
   getPlugin(key: string | undefined) {
-    if (!key) return this.plugins.getAll();
-    return this.plugins.get(key);
+    if (!key) return this.PLUGINS.getAll();
+    return this.PLUGINS.get(key);
   }
 
   // private parseEventKey(key: string) {

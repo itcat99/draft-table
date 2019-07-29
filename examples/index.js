@@ -1,15 +1,15 @@
-import DraftTable from "../src/core";
+import DraftTable, { Plugin } from "../src/index";
 
-const A = props => {
-  const { app, emitter, plugins } = props;
+// const A = props => {
+//   const { app, emitter, plugins } = props;
 
-  console.log("outside register plugin: ", app);
+//   console.log("outside register plugin: ", app);
 
-  emitter.on("_PLUGINS_::registered", name => console.log("register plugin name: ", name));
-};
+//   emitter.on("_PLUGINS_::registered", name => console.log("register plugin name: ", name));
+// };
 
-const table = new DraftTable({
-  plugins: {
-    A_Plugin: A,
-  },
-});
+// const table = new DraftTable({
+//   plugins: {
+//     A_Plugin: A,
+//   },
+// });
