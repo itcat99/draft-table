@@ -25,10 +25,11 @@ class Emitter {
    * @date 2019-07-25
    * @param {string} key 事件名称
    * @param {Function} fn 回调函数
+   * @param {string|undefined} namespace 命名空间
    * @memberof Emitter
    */
-  on(key: string, fn: Function) {
-    this.registerEvent(key, fn, EventType_Enum.ON);
+  on(key: string, fn: Function, namespace?: string) {
+    this.registerEvent(key, fn, EventType_Enum.ON, namespace);
   }
 
   /**
@@ -38,10 +39,11 @@ class Emitter {
    * @date 2019-07-25
    * @param {string} key 事件名称
    * @param {Function} fn 回调函数
+   * @param {string|undefined} namespace 命名空间
    * @memberof Emitter
    */
-  once(key: string, fn: Function) {
-    this.registerEvent(key, fn, EventType_Enum.ONCE);
+  once(key: string, fn: Function, namespace?: string) {
+    this.registerEvent(key, fn, EventType_Enum.ONCE, namespace);
   }
 
   /**
@@ -53,15 +55,17 @@ class Emitter {
    * @param {string} key 事件名称
    * @param {Function} fn 回调函数
    * @param {EventType_Enum} type 事件类型 on/once
+   * @param {string|undefined} namespace 命名空间
    * @memberof Emitter
    */
-  private registerEvent(key: string, fn: Function, type: EventType_Enum) {
+  private registerEvent(key: string, fn: Function, type: EventType_Enum, namespace?: string) {
     const event = {
       type,
       fn,
     };
 
-    this.events.set(key, event);
+    const name = namespace ? `${namespace}::${key}` : key;
+    this.events.set(name, event);
   }
 
   /**
@@ -70,10 +74,12 @@ class Emitter {
    * @author FreMaNgo
    * @date 2019-07-25
    * @param {string} key 事件名称
+   * @param {string} namespace 命名空间
    * @memberof Emitter
    */
-  del(key: string) {
-    this.events.delete(key);
+  del(key: string, namespace?: string) {
+    const name = namespace ? `${namespace}::${key}` : key;
+    this.events.delete(name);
   }
 
   /**
@@ -93,11 +99,13 @@ class Emitter {
    * @author FreMaNgo
    * @date 2019-07-25
    * @param {string} key 事件名称
-   * @param {...any[]} props 需要传递给回调函数的参数
+   * @param {any[]} props 需要传递给回调函数的参数列表
+   * @param {string|undefined} namespace 命名空间
    * @memberof Emitter
    */
-  fire(key: string, ...props: any[]) {
-    const event = this.events.get(key);
+  fire(key: string, props: any[], namespace?: string) {
+    const name = namespace ? `${namespace}::${key}` : key;
+    const event = this.events.get(name);
 
     if (event) {
       const { type, fn } = event;
@@ -107,7 +115,7 @@ class Emitter {
           break;
         case EventType_Enum.ONCE:
           fn && fn(...props);
-          this.del(key);
+          this.del(name);
           break;
         default:
           break;

@@ -20,7 +20,7 @@ export enum TextBaseline_Enum {
 }
 
 export interface Config_I {
-  target: HTMLElement;
+  target: HTMLCanvasElement | HTMLElement;
   width: number;
   height: number;
   ratio: number;

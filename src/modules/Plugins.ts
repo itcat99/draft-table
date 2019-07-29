@@ -31,7 +31,7 @@ class Plugins {
     if (this._plugins.has(name)) this._err.pop(`Has the same namespace Plugin : [${name}]`);
 
     this._plugins.set(name, fn);
-    this.emitter.fire("_PLUGINS_::registered", name);
+    this.emitter.fire("_PLUGINS_::registered", [name]);
   }
 
   /**
@@ -102,7 +102,7 @@ class Plugins {
    * @memberof Plugins
    */
   runAll(...props: any[]) {
-    this._plugins.forEach((plugin, name) => {
+    this._plugins.forEach(plugin => {
       plugin(...props);
     });
   }

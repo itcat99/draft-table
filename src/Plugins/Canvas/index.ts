@@ -1,20 +1,19 @@
-import Core from "../../core";
+import { Config_I } from "../../types/common.type";
+import { Plugin_Props_I } from "../../types/plugin.type";
+import Core from "../../Core";
 import Plugins from "../../modules/Plugins";
 import { isCanvas } from "../../helpers/is";
-
-const canvas = (props: { app: Core }) => {
-  const { app } = props;
-  console.log("options: ", app.config);
-};
-
-canvas.prototype.createCanvas = () => {};
+import Config from "../../config";
 
 class Canvas {
-  el: HTMLElement;
+  public props: Plugin_Props_I;
+  public config: Config_I;
+  el: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
 
-  constructor(public props) {
+  constructor(props: Plugin_Props_I, config: Config_I) {
     this.props = props;
+    this.config = Object.assign();
 
     this.initialized();
     this.listener();
@@ -26,15 +25,17 @@ class Canvas {
    * 2. 格式化ctx的各项属性
    */
   initialized() {
-    const { width, height, viewWidth, viewHeight, target, ratio, ...styles } = this.props;
+    const { width, height, target, ratio, ...styles } = this.props;
+    const viewWidth = width * ratio;
+    const viewHeight = height * ratio;
 
     if (isCanvas(target)) {
       target.setAttribute("style", `width: ${viewWidth}px; height: ${viewHeight}px;`);
-      target.width = width;
-      target.height = height;
+      (<HTMLCanvasElement>target).width = width;
+      (<HTMLCanvasElement>target).height = height;
 
-      this.el = target;
-      this.ctx = this.el.getContenxt("2d");
+      this.el = <HTMLCanvasElement>target;
+      this.ctx = this.el.getContext("2d");
     } else {
       const el = document.createElement("canvas");
       el.width = width;
@@ -52,33 +53,30 @@ class Canvas {
 
       this.el = el;
       this.ctx = ctx;
-
-      this.ctx.scale(ratio, ratio);
-
-      // set init attrs
-      const {
-        fontSize,
-        lineHeight,
-        fontFamily,
-        fontWeight,
-        fontStyle,
-        fontVariant,
-        fontStretch,
-        ...args
-      } = styles;
-      const font = `${fontStyle} ${fontVariant} ${fontWeight} ${fontStretch} ${fontSize}px/${lineHeight}px ${fontFamily}`;
-
-      this.setAttrs({ font, ...args }, this.ctx);
     }
+
+    this.ctx.scale(ratio, ratio);
+
+    // set init attrs
+    const {
+      fontSize,
+      lineHeight,
+      fontFamily,
+      fontWeight,
+      fontStyle,
+      fontVariant,
+      fontStretch,
+      ...args
+    } = styles;
+    const font = `${fontStyle} ${fontVariant} ${fontWeight} ${fontStretch} ${fontSize}px/${lineHeight}px ${fontFamily}`;
+
+    this.setAttrs({ font, ...args }, this.ctx);
   }
 
   listener() {
     this.el.addEventListener("click", e => {
       this.fire("click", e);
     });
-  }
-  fire(arg0: string, e: any) {
-    throw new Error("Method not implemented.");
   }
 
   setAttrs(props, ctx) {
@@ -143,4 +141,4 @@ class Canvas {
   }
 }
 
-export default props => new Canvas(props);
+export default (props: Plugin_Props_I) => new Canvas(props);
