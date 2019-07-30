@@ -24,12 +24,12 @@ class Emitter {
    * @author FreMaNgo
    * @date 2019-07-25
    * @param {string} key 事件名称
-   * @param {Function} fn 回调函数
+   * @param {Function} cb 回调函数
    * @param {string|undefined} namespace 命名空间
    * @memberof Emitter
    */
-  on(key: string, fn: Function, namespace?: string) {
-    this.registerEvent(key, fn, EventType_Enum.ON, namespace);
+  on(key: string, cb: Function, namespace?: string) {
+    this.registerEvent(key, cb, EventType_Enum.ON, namespace);
   }
 
   /**
@@ -38,12 +38,12 @@ class Emitter {
    * @author FreMaNgo
    * @date 2019-07-25
    * @param {string} key 事件名称
-   * @param {Function} fn 回调函数
+   * @param {Function} cb 回调函数
    * @param {string|undefined} namespace 命名空间
    * @memberof Emitter
    */
-  once(key: string, fn: Function, namespace?: string) {
-    this.registerEvent(key, fn, EventType_Enum.ONCE, namespace);
+  once(key: string, cb: Function, namespace?: string) {
+    this.registerEvent(key, cb, EventType_Enum.ONCE, namespace);
   }
 
   /**
@@ -53,15 +53,15 @@ class Emitter {
    * @date 2019-07-25
    * @private
    * @param {string} key 事件名称
-   * @param {Function} fn 回调函数
+   * @param {Function} cb 回调函数
    * @param {EventType_Enum} type 事件类型 on/once
    * @param {string|undefined} namespace 命名空间
    * @memberof Emitter
    */
-  private registerEvent(key: string, fn: Function, type: EventType_Enum, namespace?: string) {
+  private registerEvent(key: string, cb: Function, type: EventType_Enum, namespace?: string) {
     const event = {
       type,
-      fn,
+      cb,
     };
 
     const name = namespace ? `${namespace}::${key}` : key;
@@ -108,13 +108,13 @@ class Emitter {
     const event = this.events.get(name);
 
     if (event) {
-      const { type, fn } = event;
+      const { type, cb } = event;
       switch (type) {
         case EventType_Enum.ON:
-          fn && fn(...props);
+          cb && cb(...props);
           break;
         case EventType_Enum.ONCE:
-          fn && fn(...props);
+          cb && cb(...props);
           this.del(name);
           break;
         default:

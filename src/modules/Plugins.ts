@@ -1,4 +1,11 @@
-import { Plugin_I, Plugin_Collection_I, RegisterOptions_I } from "../types/plugin.type";
+import {
+  Plugin_I,
+  PluginCollection_I,
+  RegisterOptions_I,
+  PluginsProps_I,
+} from "../types/plugins.type";
+import { Context_I } from "../types/common.type";
+
 import Emitter from "./Emitter";
 import Err from "./Err";
 import Plugin from "./Plugin";
@@ -10,17 +17,23 @@ const DEFAULT_REGISTER_OPTS: RegisterOptions_I = {
 class Plugins {
   private _plugins: Map<string, Plugin_I>;
   private _err: Err;
+  private _emitter: Emitter;
+  private _context: Context_I;
 
   /**
    *Creates an instance of Plugins.
    * @author FreMaNgo
    * @date 2019-07-25
-   * @param {Emitter} emitter 事件处理模块
+   * @param {Emitter} props
    * @memberof Plugins
    */
-  constructor(public emitter: Emitter) {
+  constructor(props: PluginsProps_I) {
+    this._context = Object.assign({}, props, { plugins: this });
+
+    this._emitter = this._context.emitter;
+    this._err = this._context.err;
+
     this._plugins = new Map();
-    this._err = new Err();
   }
 
   /**
@@ -32,23 +45,18 @@ class Plugins {
    * @param {Plugin_I} fn 插件函数，插件的逻辑写在这里面
    * @memberof Plugins
    */
-  register(
-    name: string,
-    plugin: typeof Plugin,
-    defaultProps?: object,
-    options?: RegisterOptions_I,
-  ) {
+  register(name: string, plugin: typeof Plugin, options?: RegisterOptions_I) {
     if (this._plugins.has(name)) this._err.pop(`Has the same namespace Plugin : [${name}]`);
 
     const opts = Object.assign({}, DEFAULT_REGISTER_OPTS, options);
+    if (opts.namespace) opts.namespace = name;
 
     this._plugins.set(name, {
       class: plugin,
-      defaultProps,
       options: opts,
     });
 
-    this.emitter.fire("registered", [name], "_PLUGINS_");
+    this._emitter.fire("registerPlugin", [name]);
   }
 
   /**
@@ -82,11 +90,11 @@ class Plugins {
    *
    * @author FreMaNgo
    * @date 2019-07-25
-   * @returns {Plugin_Collection_I}
+   * @returns {PluginCollection_I}
    * @memberof Plugins
    */
-  getAll(): Plugin_Collection_I {
-    const result: Plugin_Collection_I = {};
+  getAll(): PluginCollection_I {
+    const result: PluginCollection_I = {};
 
     this._plugins.forEach((plugin, key) => {
       result[key] = plugin;
@@ -105,13 +113,13 @@ class Plugins {
    * @returns {(Plugin | void)} 当前插件的实例
    * @memberof Plugins
    */
-  run(name: string, props: object): Plugin | void {
+  run(name: string, props: object): Plugin {
     const _plugin = this._plugins.get(name);
 
     if (_plugin) {
-      const { defaultProps, class: _class } = _plugin;
+      const { class: _class, options } = _plugin;
 
-      return new _class({}, Object.assign({}, defaultProps, props));
+      return new _class(this._context, Object.assign({}, options, props));
     }
   }
 
@@ -124,13 +132,13 @@ class Plugins {
    * @returns {(Plugin[] | void)} plugin的实例集合
    * @memberof Plugins
    */
-  runAll(props: object): Plugin[] | void {
-    const instances = [];
+  runAll(props: object): { [namespace: string]: Plugin } {
+    const instances: { [namespace: string]: Plugin } = {};
     this._plugins.forEach((plugin, namespace) => {
-      instances.push(this.run(namespace, props));
+      instances[namespace] = this.run(namespace, props);
     });
 
-    if (instances.length > 0) return instances;
+    return instances;
   }
 }
 

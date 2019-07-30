@@ -9,19 +9,30 @@
 3. 初始化`Emitter`模块
 4. 初始化`Plugins`模块
 5. 初始化`Err`模块
-6. 加载并初始化内置插件
-7. 加载外部插件
-8. 根据外部插件是否`autoStart`，初始化需要自动执行的外部插件
+6. 初始化全局上下文`context`
+7. 加载并初始化内置插件
+8. 加载外部插件
+9. 根据外部插件是否`autoStart`，初始化需要自动执行的外部插件
 
 ## Usage
 
-```
-import DraftTable from 'draft-table';
+```ts
+import DraftTable from "draft-table";
 
 const table = new DraftTable();
 ```
 
+## Constructor
+
+构造函数签名：**(props: [Config_I](/types/common?id=config_i)): Core**
+
+返回值：Core 实例
+
 ## Members
+
+### config
+
+描述：全局配置选项
 
 ### COLLECTIONS
 
@@ -43,44 +54,59 @@ const table = new DraftTable();
 
 描述：`Err`模块的实例
 
-### plugins
+### context
 
-描述：已注册的所有插件的集合，可以通过实例拿到插件，进行初始化等操作
+全局上下文，成员为以下：
 
-```js
-// 新建实例
-const table = new DraftTable();
+| name    | desc             |
+| ------- | ---------------- |
+| core    | core 模块实例    |
+| config  | 全局配置选项     |
+| err     | err 模块实例     |
+| emitter | emitter 模块实例 |
+| plugins | plugins 模块实例 |
 
-// 注册插件
-table.registerPlugin("Hello", () => {});
+### pluginInstances
 
-// 获取插件并初始化
-const hello = table.plugins.Hello();
-```
+描述：以运行的插件实例集合
 
 ## APIs
 
-### registerPlugin _待定_
+### registerPlugin
 
 描述：注册外部插件
 
-方法签名：(name: string, plugin: Class, default: object, options: object): void
+方法签名：**(name: string, plugin: typeof Plugin, options?: [RegisterOptions_I](/types/plugins?id=RegisterOptions_I)): Core**
+
+返回值：Core 实例
 
 方法参数：
 
-| name    | type   | default | desc                                                                               |
-| ------- | ------ | ------- | ---------------------------------------------------------------------------------- |
-| name    | string | -       | 插件的名称，作为插件的 namespace，不可重复。[内置插件列表](/plugins/insidePlugins) |
-| class   | Class  | -       | 插件的类，[详情](/plugins/callback)                                                |
-| default | object | {}      | 插件的初始属性                                                                     |
-| options | object | -       | 注册插件的选项， [详情](/modules/core?id=options)                                  |
+| name    | type                                                     | default | optional | desc                                                                                                                      |
+| ------- | -------------------------------------------------------- | ------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
+| name    | string                                                   | -       | false    | 插件的名称，如果没有配置`options.namespace`属性，则作为插件的 namespace，不可重复。[内置插件列表](/plugins/insidePlugins) |
+| class   | Class                                                    | -       | false    | 插件的类，[详情](/plugins/callback)                                                                                       |
+| options | [RegisterOptions_I](/types/plugins?id=RegisterOptions_I) | -       | true     | 注册插件的选项， [详情](/modules/core?id=options)                                                                         |
 
 #### options
 
-| name | type    | default | desc                     |
-| ---- | ------- | ------- | ------------------------ |
-| auto | boolean | false   | 注册完毕是否自动创建实例 |
+| name      | type    | default | optional | desc                                               |
+| --------- | ------- | ------- | -------- | -------------------------------------------------- |
+| namespace | string  | -       | true     | 插件的命名空间                                     |
+| auto      | boolean | false   | false    | 注册完毕是否自动创建实例                           |
+| autoProps | object  | -       | true     | 当`auto`属性为 true 时，用于创建实例的插件配置对象 |
 
-### getPluginInstance
+### run
 
-描述：获取插件实例集合
+描述：运行插件，会执行`new`操作，并替换在`pluginInstances`成员上同名的插件实例
+
+方法签名：**(name: string, options?:any): Plugin**
+
+返回值：插件实例
+
+方法参数：
+
+| name    | type   | default | optional | desc           |
+| ------- | ------ | ------- | -------- | -------------- |
+| name    | string | -       | false    | 插件名称       |
+| options | any    | -       | true     | 插件的配置选项 |

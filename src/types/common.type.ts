@@ -1,4 +1,5 @@
-import { Plugin_Collection_I } from "./plugin.type";
+import { PluginCollection_I, PluginsProps_I } from "./plugins.type";
+import Plugins from "../modules/Plugins";
 
 export type Pos_Type = [number, number];
 
@@ -19,6 +20,11 @@ export enum TextBaseline_Enum {
   BOTTOM = "bottom",
 }
 
+/* ========== INTERFACES ========= */
+export interface Context_I extends PluginsProps_I {
+  plugins: Plugins;
+}
+
 export interface Config_I {
   target: HTMLCanvasElement | HTMLElement;
   width: number;
@@ -36,5 +42,6 @@ export interface Config_I {
   lineWidth: number; // 线的宽度
   textAlign: TextAlign_Enum;
   textBaseline: TextBaseline_Enum;
-  plugins?: Plugin_Collection_I;
+  plugins?: PluginCollection_I;
+  [key: string]: any;
 }

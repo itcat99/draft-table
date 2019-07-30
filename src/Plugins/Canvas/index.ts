@@ -1,20 +1,20 @@
-import { Config_I } from "../../types/common.type";
-import { Plugin_Props_I } from "../../types/plugin.type";
-import Core from "../../Core";
-import Plugins from "../../modules/Plugins";
+import { Config_I, Context_I } from "../../types/common.type";
 import { isCanvas } from "../../helpers/is";
-import Config from "../../config";
+import Plugin from "../../modules/Plugin";
+import { Attrs_I, Context2d_I } from "./canvas.types";
 
-class Canvas {
-  public props: Plugin_Props_I;
+class Canvas extends Plugin {
   public config: Config_I;
   el: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
+  ctx: Context2d_I;
 
-  constructor(props: Plugin_Props_I, config: Config_I) {
-    this.props = props;
-    this.config = Object.assign();
+  constructor(context: Context_I, options: any) {
+    super(context, options);
 
+    const { config: originConfig } = this.context;
+    const { plugins, ...args } = originConfig;
+
+    this.config = args;
     this.initialized();
     this.listener();
   }
@@ -25,22 +25,21 @@ class Canvas {
    * 2. 格式化ctx的各项属性
    */
   initialized() {
-    const { width, height, target, ratio, ...styles } = this.props;
-    const viewWidth = width * ratio;
-    const viewHeight = height * ratio;
+    console.log("canvas");
+    const { width, height, target, ratio, ...styles } = this.config;
 
     if (isCanvas(target)) {
-      target.setAttribute("style", `width: ${viewWidth}px; height: ${viewHeight}px;`);
-      (<HTMLCanvasElement>target).width = width;
-      (<HTMLCanvasElement>target).height = height;
+      target.setAttribute("style", `width: ${width}px; height: ${height}px;`);
+      (<HTMLCanvasElement>target).width = width * ratio;
+      (<HTMLCanvasElement>target).height = height * ratio;
 
       this.el = <HTMLCanvasElement>target;
       this.ctx = this.el.getContext("2d");
     } else {
       const el = document.createElement("canvas");
-      el.width = width;
-      el.height = height;
-      el.setAttribute("style", `width: ${viewWidth}px; height: ${viewHeight}px;`);
+      el.width = width * ratio;
+      el.height = height * ratio;
+      el.setAttribute("style", `width: ${width}px; height: ${height}px;`);
 
       const ctx = el.getContext("2d");
       const scriptEl = target.querySelector("script");
@@ -68,77 +67,91 @@ class Canvas {
       fontStretch,
       ...args
     } = styles;
+
     const font = `${fontStyle} ${fontVariant} ${fontWeight} ${fontStretch} ${fontSize}px/${lineHeight}px ${fontFamily}`;
+    this.setAttrs({ font }, this.ctx);
 
     this.setAttrs({ font, ...args }, this.ctx);
   }
 
-  listener() {
-    this.el.addEventListener("click", e => {
-      this.fire("click", e);
-    });
-  }
-
-  setAttrs(props, ctx) {
-    for (let key of Object.keys(props)) {
-      const val = props[key];
-
+  setAttrs(attrs: Attrs_I, ctx: Context2d_I) {
+    for (let key of Object.keys(attrs)) {
+      const val = attrs[key];
       ctx[key] = val;
     }
 
     ctx.save();
   }
 
+  listener() {
+    this.el.addEventListener("mousemove", e => {
+      this.fire("mousemove", [e]);
+    });
+    this.el.addEventListener("click", e => {
+      this.fire("click", [e]);
+    });
+  }
+
+  // setAttrs(props, ctx) {
+  //   for (let key of Object.keys(props)) {
+  //     const val = props[key];
+
+  //     ctx[key] = val;
+  //   }
+
+  //   ctx.save();
+  // }
+
   /**
    * 绘制线条
    * @param {line[]} lines 一个子项为line结构的数组
    * @return {CanvasRenderingContext2D} 返回当前的ctx上下文
    */
-  drawLine(lines) {
-    if (!lines.length) return false;
+  // drawLine(lines) {
+  //   if (!lines.length) return false;
 
-    this.ctx.beginPath();
-    lines.forEach(line => {
-      const { from, to } = line.get();
-      this.ctx.moveTo(...from);
-      this.ctx.lineTo(...to);
-    });
-    this.ctx.stroke();
+  //   this.ctx.beginPath();
+  //   lines.forEach(line => {
+  //     const { from, to } = line.get();
+  //     this.ctx.moveTo(...from);
+  //     this.ctx.lineTo(...to);
+  //   });
+  //   this.ctx.stroke();
 
-    return this.ctx;
-  }
+  //   return this.ctx;
+  // }
 
   /**
    * 绘制矩形
    * @param {rect[]} rects 一个子项为rect结构的数组
    * @return {CanvasRenderingContext2D} 返回当前的ctx上下文
    */
-  drawRect(rects) {
-    if (!rects.length) return false;
+  // drawRect(rects) {
+  //   if (!rects.length) return false;
 
-    rects.forEach(rect => {
-      const { pos, width, height } = rect.get();
-      this.ctx.fillRect(...pos, width, height);
-    });
+  //   rects.forEach(rect => {
+  //     const { pos, width, height } = rect.get();
+  //     this.ctx.fillRect(...pos, width, height);
+  //   });
 
-    return this.ctx;
-  }
+  //   return this.ctx;
+  // }
 
   /**
    * 绘制文字
    * @param {text[]} texts 一个子项为text结构的数组
    * @return {CanvasRenderingContext2D} 返回当前的ctx上下文
    */
-  drawText(texts) {
-    if (!texts.length) return false;
+  // drawText(texts) {
+  //   if (!texts.length) return false;
 
-    texts.forEach(text => {
-      const { pos, value } = text.get();
-      this.ctx.fillText(value, ...pos);
-    });
+  //   texts.forEach(text => {
+  //     const { pos, value } = text.get();
+  //     this.ctx.fillText(value, ...pos);
+  //   });
 
-    return this.ctx;
-  }
+  //   return this.ctx;
+  // }
 }
 
-export default (props: Plugin_Props_I) => new Canvas(props);
+export default Canvas;

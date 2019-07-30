@@ -1,9 +1,16 @@
 - 入门
   - [介绍](/)
 - 模块
-  - [Core](/modules/core)
-  - [Plugins](/modules/plugins)
-  - [Emitter](/modules/emitter)
-  - [Collections](/modules/collections)
-  - [Store](/modules/store)
-  - [Err](/modules/err)
+  - [Core - 核心](/modules/core)
+  - [Plugins - 插件池](/modules/plugins)
+  - [Plugin - 插件](/modules/plugin)
+  - [Emitter - 事件池](/modules/emitter)
+  - [Collections - 集合](/modules/collections)
+  - [Store - 数据池](/modules/store)
+  - [Err - 错误处理](/modules/err)
+- [配置](/config)
+- types
+  - [介绍](/types/about)
+  - [common](/types/common)
+  - [plugins](/types/plugins)
+  - [emitter](/types/emitter)

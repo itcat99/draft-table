@@ -6,8 +6,9 @@ import Err from "./Err";
 import DEFAULT_PROPS from "../config";
 
 /* inside Plugins */
-import canvas from "../Plugins/Canvas";
-import { Plugin_I } from "../types/plugin.type";
+import Canvas from "../Plugins/Canvas";
+import { RegisterOptions_I, PluginCollection_I } from "../types/plugins.type";
+import { INSIDE_PLUGIN_NAMESPACES } from "../constants";
 
 class Core {
   public COLLECTIONS: any;
@@ -16,9 +17,10 @@ class Core {
   public PLUGINS: Plugins;
   public ERR: Err;
 
-  public events: Map<string, any>;
   public config: Config_I;
-  public fn: any;
+  public pluginInstances: {
+    [namespace: string]: Plugin;
+  };
 
   /**
    * 初始化：emitter,plugins,collection,store,err
@@ -29,106 +31,128 @@ class Core {
    * @memberof Core
    */
   constructor(props: Config_I) {
+    this.pluginInstances = {};
+
+    // 内置模块
+    const InsidePlugins = {
+      canvas: {
+        class: Canvas,
+        options: {
+          namespace: "canvas",
+          auto: true,
+        },
+      },
+    };
+
+    let plugins = { ...InsidePlugins };
+    if (props && props.plugins) {
+      this._checkPlugin(props.plugins);
+
+      plugins = Object.assign({}, plugins, props.plugins);
+    }
+    // 全局配置信息
+    this.config = Object.assign({}, DEFAULT_PROPS, props, {
+      plugins,
+    });
+
+    // 初始化各个模块
     this.EMITTER = new Emitter();
-    this.PLUGINS = new Plugins(this.EMITTER);
+    this.ERR = new Err();
+    this.PLUGINS = new Plugins({
+      err: this.ERR,
+      core: this,
+      emitter: this.EMITTER,
+      config: this.config,
+    });
 
-    const InsidePlugins = { canvas };
-
-    this.config = Object.assign({}, DEFAULT_PROPS, props);
-
-    // this.listener();
-    // this.registerPlugins();
+    // 注册所有插件
+    this._registerPlugins();
+    // 运行自动执行的插件
+    this._runAutoPlugins();
     // this.initiailzed();
   }
 
-  registerPlugins() {
-    const { plugins } = this.config;
-
-    for (const name of Object.keys(plugins)) {
-      this.PLUGINS.register(name, plugins[name]);
+  private _checkPlugin(plugins: PluginCollection_I) {
+    for (let key of Object.keys(plugins)) {
+      if (INSIDE_PLUGIN_NAMESPACES.indexOf(key) < 0) {
+        this.ERR.pop(
+          `please checked register plugin's namespace, [${INSIDE_PLUGIN_NAMESPACES}] list is not use.`,
+        );
+      }
     }
-  }
-
-  runInsidePlugins() {}
-  runOutsidePlugins() {}
-
-  /**
-   * 注册并按顺序运行所有插件
-   *
-   * @author FreMaNgo
-   * @date 2019-07-25
-   * @private
-   * @memberof Core
-   */
-  private initiailzed() {
-    const { plugins } = this.config;
-
-    for (const name of Object.keys(plugins)) {
-      this.PLUGINS.register(name, plugins[name]);
-    }
-
-    const allPlugins = this.PLUGINS.getAll();
-    for (const name of Object.keys(allPlugins)) {
-      this.PLUGINS.run(name, {
-        app: this,
-        emitter: this.getOnwerEmitter(name),
-        plugins: this.PLUGINS,
-      });
-    }
-  }
-
-  listener() {
-    this.EMITTER.on("_PLUGINS_::registered", (name: string) => {
-      this.fn[name] = this.PLUGINS.get(name);
-    });
-  }
-
-  private getOnwerEmitter(name: string) {
-    return {
-      events: this.EMITTER.events,
-      on: this.EMITTER.on.bind(this.EMITTER),
-      once: this.EMITTER.once.bind(this.EMITTER),
-      fire: (key: string, ...props: any[]) =>
-        this.EMITTER.fire.call(this.EMITTER, `${name}::${key}`, ...props),
-      del: this.EMITTER.del.bind(this.EMITTER),
-      clear: this.EMITTER.clear.bind(this.EMITTER),
-    };
-  }
-
-  registerPlugin(key: string, plugin: Plugin_I, auto: boolean) {
-    this.PLUGINS.register(key, plugin);
-
-    auto && this.PLUGINS.run(key);
   }
 
   /**
-   * 获取插件实例
+   * 注册外部插件
    *
    * @author FreMaNgo
-   * @date 2019-07-26
-   * @param {(string | undefined)} key
-   * @returns
+   * @date 2019-07-30
+   * @param {string} name 插件名，如果没有设置options.namespace属性，插件名作为namespace
+   * @param {typeof Plugin} plugin 插件类
+   * @param {RegisterOptions_I} [options] 插件配置信息
+   * @returns {Core} 返回Core的实例
    * @memberof Core
    */
-  getPlugin(key: string | undefined) {
-    if (!key) return this.PLUGINS.getAll();
-    return this.PLUGINS.get(key);
+  registerPlugin(name: string, plugin: typeof Plugin, options?: RegisterOptions_I): Core {
+    this.PLUGINS.register(name, plugin, options);
+    return this;
   }
 
-  // private parseEventKey(key: string) {
-  //   const keyVals = key.split(EVENT_LINK);
+  /**
+   *
+   *
+   * @author FreMaNgo
+   * @date 2019-07-30
+   * @param {string} name 插件名
+   * @param {*} options 插件的配置属性
+   * @returns {Plugin} 返回插件的实例
+   * @memberof Core
+   */
+  run(name: string, options: any): Plugin {
+    const instance = this.PLUGINS.run(name, options);
+    this.pluginInstances[name] = instance;
 
-  //   let [namespace, eventname] = keyVals;
-  //   if (!event) {
-  //     eventname = namespace;
-  //     namespace = EVENT_NAMESPACE_GLOBAL;
-  //   }
+    return instance;
+  }
 
-  //   return {
-  //     namespace,
-  //     eventname,
-  //   };
-  // }
+  removeEvent(key: string, target: string) {
+    this.EMITTER.del(key, target);
+    return this;
+  }
+
+  on(key: string, cb: Function, target: string) {
+    this.EMITTER.on(key, cb, target);
+    return this;
+  }
+
+  once(key: string, cb: Function, target: string) {
+    this.EMITTER.once(key, cb, target);
+    return this;
+  }
+
+  fire(key: string, props: any[], namespace: string) {
+    this.EMITTER.fire(key, props, namespace);
+    return this;
+  }
+
+  private _registerPlugins() {
+    const { plugins } = this.config;
+
+    for (let key of Object.keys(plugins)) {
+      const { class: plugin, options } = plugins[key];
+      this.PLUGINS.register(key, plugin, options);
+    }
+  }
+
+  private _runAutoPlugins() {
+    const plugins = this.PLUGINS.getAll();
+    console.log("plugins: ", plugins);
+    for (let key of Object.keys(plugins)) {
+      const plugin = plugins[key];
+      const { auto, autoProps } = plugin.options;
+      if (auto) this.pluginInstances[key] = this.PLUGINS.run(key, autoProps);
+    }
+  }
 }
 
 export default Core;
