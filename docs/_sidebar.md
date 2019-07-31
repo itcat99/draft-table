@@ -9,6 +9,9 @@
   - [Store - 数据池](/modules/store)
   - [Err - 错误处理](/modules/err)
 - [配置](/config/index)
+- 内置插件
+  - [canvas](/insidePlugins/canvas)
+  - [scrollbar](/insidePlugins/scrollbar)
 - types
   - [介绍](/types/about)
   - [common](/types/common)
