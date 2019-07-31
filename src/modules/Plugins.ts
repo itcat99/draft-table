@@ -35,6 +35,7 @@ class Plugins {
     this._emitter = this._context.emitter;
     this._err = this._context.err;
 
+    this._instances = new Map();
     this._plugins = new Map();
   }
 

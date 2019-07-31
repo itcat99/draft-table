@@ -176,6 +176,14 @@ const table = new DraftTable();
 
 ## Events/事件
 
+### wheel
+
+描述：鼠标滚轮事件
+
+回调函数参数：
+
+1. DOM 原生`wheel`事件回调参数
+
 ### mousemove
 
 描述：鼠标移动事件

@@ -145,6 +145,10 @@ class Core {
     const canvas = <Canvas>this.pluginInstances.canvas;
     const el = canvas.el;
 
+    el.addEventListener("wheel", e => {
+      this.fire("wheel", [e]);
+      e.preventDefault();
+    });
     el.addEventListener("blur", e => {
       this.fire("blur", [e]);
     });
