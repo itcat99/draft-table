@@ -65,3 +65,11 @@ enum TextBaseline_Enum {
   BOTTOM = "bottom",
 }
 ```
+
+## Pos_Type
+
+坐标的类型
+
+```ts
+type Pos_Type = [number, number];
+```

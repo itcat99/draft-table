@@ -2,7 +2,7 @@
 
 > Plugin 模块作为创建插件时，被继承的基础模块
 
-## Usage
+## Usage/使用
 
 新建一个插件，只需要继承`Plugin`模块，然后根据具体需要，写相应逻辑即可。
 
@@ -18,7 +18,13 @@ class A extends Plugin {
 export default A;
 ```
 
-## Members
+## Constructor/构造函数
+
+构造函数签名：**(context: [Context_I](/types/common?id=Context_I), options: any): Plugin**
+
+返回值：Core 实例
+
+## Members/成员
 
 ### namespace
 
@@ -32,39 +38,39 @@ export default A;
 
 描述：插件的配置属性。[详情]()
 
-## Methods
+## APIs/接口
 
 ### on
 
 描述：注册监听事件
 
-方法签名：**(key: string, cb:Function, target:string): Plugin**
+方法签名：**(key: string, cb:[Callback_I](/types/emitter?id=Callback_I), target:string): Plugin**
 
 返回值：插件实例
 
 方法参数：
 
-| name   | type     | default        | optional | desc                                 |
-| ------ | -------- | -------------- | -------- | ------------------------------------ |
-| key    | string   | -              | false    | 事件名称                             |
-| cb     | Function | -              | false    | 回调函数                             |
-| target | string   | this.namespace | true     | 目标命名空间，默认对于自身触发的事件 |
+| name   | type                                       | default        | optional | desc                                 |
+| ------ | ------------------------------------------ | -------------- | -------- | ------------------------------------ |
+| key    | string                                     | -              | false    | 事件名称                             |
+| cb     | [Callback_I](/types/emitter?id=Callback_I) | -              | false    | 回调函数                             |
+| target | string                                     | this.namespace | true     | 目标命名空间，默认对于自身触发的事件 |
 
 ### once
 
 描述：注册一次性的监听事件
 
-方法签名：**(key: string, cb:Function, target:string): Plugin**
+方法签名：**(key: string, cb:[Callback_I](/types/emitter?id=Callback_I), target:string): Plugin**
 
 返回值：插件实例
 
 方法参数：
 
-| name   | type     | default        | optional | desc                                 |
-| ------ | -------- | -------------- | -------- | ------------------------------------ |
-| key    | string   | -              | false    | 事件名称                             |
-| cb     | Function | -              | false    | 回调函数                             |
-| target | string   | this.namespace | true     | 目标命名空间，默认对于自身触发的事件 |
+| name   | type                                       | default        | optional | desc                                 |
+| ------ | ------------------------------------------ | -------------- | -------- | ------------------------------------ |
+| key    | string                                     | -              | false    | 事件名称                             |
+| cb     | [Callback_I](/types/emitter?id=Callback_I) | -              | false    | 回调函数                             |
+| target | string                                     | this.namespace | true     | 目标命名空间，默认对于自身触发的事件 |
 
 ### fire
 

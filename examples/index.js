@@ -11,17 +11,15 @@ import DraftTable, { Plugin } from "../src/index";
 const table = new DraftTable();
 
 table
-  .on(
-    "mousemove",
-    e => {
-      console.log("canvas: ", e.x);
-    },
-    "canvas",
-  )
-  .on(
-    "click",
-    e => {
-      console.log("canvas click: ", e.x);
-    },
-    "canvas",
-  );
+  .on("mousemove", e => {
+    console.log("canvas: ", e.x);
+  })
+  .on("click", e => {
+    console.log("canvas click: ", e.x);
+  })
+  .on("keypress", e => {
+    console.log("keypress: ", e.keyCode);
+  })
+  .on("dbclick", e => {
+    console.log("dbclick  : ", e);
+  });

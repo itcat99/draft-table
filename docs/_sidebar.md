@@ -8,7 +8,7 @@
   - [Collections - 集合](/modules/collections)
   - [Store - 数据池](/modules/store)
   - [Err - 错误处理](/modules/err)
-- [配置](/config)
+- [配置](/config/index)
 - types
   - [介绍](/types/about)
   - [common](/types/common)

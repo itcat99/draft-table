@@ -1,4 +1,4 @@
-import { PluginCollection_I, PluginsProps_I } from "./plugins.type";
+import { PluginsProps_I, PluginCollection_I } from "./plugins.type";
 import Plugins from "../modules/Plugins";
 
 export type Pos_Type = [number, number];

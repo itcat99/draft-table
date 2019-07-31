@@ -1,4 +1,4 @@
-import { EventType_Enum, Events_Type } from "../types/emitter.type";
+import { EventType_Enum, Events_Type, Callback_I } from "../types/emitter.type";
 
 /**
  * 实现了自定义事件
@@ -24,11 +24,11 @@ class Emitter {
    * @author FreMaNgo
    * @date 2019-07-25
    * @param {string} key 事件名称
-   * @param {Function} cb 回调函数
+   * @param {Callback_I} cb 回调函数
    * @param {string|undefined} namespace 命名空间
    * @memberof Emitter
    */
-  on(key: string, cb: Function, namespace?: string) {
+  on(key: string, cb: Callback_I, namespace?: string) {
     this.registerEvent(key, cb, EventType_Enum.ON, namespace);
   }
 
@@ -38,11 +38,11 @@ class Emitter {
    * @author FreMaNgo
    * @date 2019-07-25
    * @param {string} key 事件名称
-   * @param {Function} cb 回调函数
+   * @param {Callback_I} cb 回调函数
    * @param {string|undefined} namespace 命名空间
    * @memberof Emitter
    */
-  once(key: string, cb: Function, namespace?: string) {
+  once(key: string, cb: Callback_I, namespace?: string) {
     this.registerEvent(key, cb, EventType_Enum.ONCE, namespace);
   }
 
@@ -53,12 +53,12 @@ class Emitter {
    * @date 2019-07-25
    * @private
    * @param {string} key 事件名称
-   * @param {Function} cb 回调函数
+   * @param {Callback_I} cb 回调函数
    * @param {EventType_Enum} type 事件类型 on/once
    * @param {string|undefined} namespace 命名空间
    * @memberof Emitter
    */
-  private registerEvent(key: string, cb: Function, type: EventType_Enum, namespace?: string) {
+  private registerEvent(key: string, cb: Callback_I, type: EventType_Enum, namespace?: string) {
     const event = {
       type,
       cb,

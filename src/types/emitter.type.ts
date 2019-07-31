@@ -5,7 +5,11 @@ export enum EventType_Enum {
 
 export interface Event_I {
   type: EventType_Enum;
-  cb: Function;
+  cb: Callback_I;
+}
+
+export interface Callback_I {
+  (...props: any[]): void;
 }
 
 export type Events_Type = Map<string, Event_I>;

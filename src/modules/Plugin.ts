@@ -1,5 +1,6 @@
 import { Context_I } from "../types/common.type";
 import Emitter from "../modules/Emitter";
+import { Callback_I } from "../types/emitter.type";
 
 class Plugin {
   private _emitter: Emitter;
@@ -16,13 +17,13 @@ class Plugin {
     this._emitter.del(key, target);
   }
 
-  on(key: string, cb: Function, target: string = this.namespace): Plugin {
+  on(key: string, cb: Callback_I, target: string = this.namespace): Plugin {
     this._emitter.on(key, cb, target);
 
     return this;
   }
 
-  once(key: string, cb: Function, target: string = this.namespace): Plugin {
+  once(key: string, cb: Callback_I, target: string = this.namespace): Plugin {
     this._emitter.once(key, cb, target);
 
     return this;

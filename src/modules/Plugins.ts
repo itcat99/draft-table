@@ -1,8 +1,9 @@
 import {
   Plugin_I,
-  PluginCollection_I,
   RegisterOptions_I,
   PluginsProps_I,
+  PluginsClasses_Type,
+  PluginsInstances_Type,
 } from "../types/plugins.type";
 import { Context_I } from "../types/common.type";
 
@@ -15,7 +16,8 @@ const DEFAULT_REGISTER_OPTS: RegisterOptions_I = {
 };
 
 class Plugins {
-  private _plugins: Map<string, Plugin_I>;
+  private _instances: PluginsInstances_Type;
+  private _plugins: PluginsClasses_Type;
   private _err: Err;
   private _emitter: Emitter;
   private _context: Context_I;
@@ -49,14 +51,13 @@ class Plugins {
     if (this._plugins.has(name)) this._err.pop(`Has the same namespace Plugin : [${name}]`);
 
     const opts = Object.assign({}, DEFAULT_REGISTER_OPTS, options);
-    if (opts.namespace) opts.namespace = name;
 
     this._plugins.set(name, {
       class: plugin,
       options: opts,
     });
 
-    this._emitter.fire("registerPlugin", [name]);
+    this._emitter.fire("register", [name]);
   }
 
   /**
@@ -69,6 +70,8 @@ class Plugins {
    */
   del(name: string) {
     this._plugins.delete(name);
+    this._instances.delete(name);
+    this._emitter.fire("delete", [name]);
   }
 
   /**
@@ -90,17 +93,11 @@ class Plugins {
    *
    * @author FreMaNgo
    * @date 2019-07-25
-   * @returns {PluginCollection_I}
+   * @returns {PluginsClasses_Type}
    * @memberof Plugins
    */
-  getAll(): PluginCollection_I {
-    const result: PluginCollection_I = {};
-
-    this._plugins.forEach((plugin, key) => {
-      result[key] = plugin;
-    });
-
-    return result;
+  getAll(): PluginsClasses_Type {
+    return this._plugins;
   }
 
   /**
@@ -113,13 +110,17 @@ class Plugins {
    * @returns {(Plugin | void)} 当前插件的实例
    * @memberof Plugins
    */
-  run(name: string, props: object): Plugin {
+  run(name: string, props?: object): Plugin {
     const _plugin = this._plugins.get(name);
 
     if (_plugin) {
       const { class: _class, options } = _plugin;
 
-      return new _class(this._context, Object.assign({}, options, props));
+      const instance = new _class(this._context, Object.assign({}, options, props));
+      this._instances.set(name, instance);
+
+      this._emitter.fire("run", [name]);
+      return instance;
     }
   }
 
@@ -132,13 +133,12 @@ class Plugins {
    * @returns {(Plugin[] | void)} plugin的实例集合
    * @memberof Plugins
    */
-  runAll(props: object): { [namespace: string]: Plugin } {
-    const instances: { [namespace: string]: Plugin } = {};
-    this._plugins.forEach((plugin, namespace) => {
-      instances[namespace] = this.run(namespace, props);
+  runAll(props?: object): PluginsInstances_Type {
+    this._plugins.forEach((plugin, name) => {
+      this.run(name, props);
     });
 
-    return instances;
+    return this._instances;
   }
 }
 

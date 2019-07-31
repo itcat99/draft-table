@@ -17,7 +17,7 @@ interface Plugin_I {
 
 ```ts
 interface RegisterOptions_I {
-  auto: boolean;
+  auto?: boolean;
   autoProps?: object;
   namespace?: string;
 }
@@ -25,7 +25,7 @@ interface RegisterOptions_I {
 
 ## PluginCollection_I
 
-插件集合的接口
+Config 内插件集合的接口
 
 ```ts
 interface PluginCollection_I {
@@ -44,4 +44,20 @@ interface PluginsProps_I {
   emitter: Emitter;
   config: Config_I;
 }
+```
+
+## PluginsClasses_Type
+
+插件类对象的集合类型
+
+```ts
+type PluginsClasses_Type = Map<string, Plugin_I>;
+```
+
+## PluginsInstances_Type
+
+插件实例的集合类型
+
+```ts
+type PluginsInstances_Type = Map<string, Plugin>;
 ```

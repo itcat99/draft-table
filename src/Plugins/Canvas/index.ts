@@ -16,7 +16,6 @@ class Canvas extends Plugin {
 
     this.config = args;
     this.initialized();
-    this.listener();
   }
 
   /**
@@ -51,6 +50,7 @@ class Canvas extends Plugin {
       }
 
       this.el = el;
+      if (!this.el.tabIndex || this.el.tabIndex < 0) this.el.tabIndex = 0;
       this.ctx = ctx;
     }
 
@@ -81,15 +81,6 @@ class Canvas extends Plugin {
     }
 
     ctx.save();
-  }
-
-  listener() {
-    this.el.addEventListener("mousemove", e => {
-      this.fire("mousemove", [e]);
-    });
-    this.el.addEventListener("click", e => {
-      this.fire("click", [e]);
-    });
   }
 
   // setAttrs(props, ctx) {

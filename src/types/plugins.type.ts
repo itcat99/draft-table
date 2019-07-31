@@ -6,7 +6,7 @@ import Err from "../modules/Err";
 import { Config_I } from "./common.type";
 
 export interface RegisterOptions_I {
-  auto: boolean;
+  auto?: boolean;
   autoProps?: object;
   namespace?: string;
 }
@@ -26,3 +26,6 @@ export interface PluginsProps_I {
   emitter: Emitter;
   config: Config_I;
 }
+
+export type PluginsClasses_Type = Map<string, Plugin_I>;
+export type PluginsInstances_Type = Map<string, Plugin>;

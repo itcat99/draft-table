@@ -1,14 +1,18 @@
-import { Config_I } from "../types/common.type";
 import Emitter from "./Emitter";
 import Plugins from "./Plugins";
 import Plugin from "./Plugin";
 import Err from "./Err";
+
 import DEFAULT_PROPS from "../config";
+import { INSIDE_PLUGIN_NAMESPACES } from "../constants";
 
 /* inside Plugins */
 import Canvas from "../Plugins/Canvas";
-import { RegisterOptions_I, PluginCollection_I } from "../types/plugins.type";
-import { INSIDE_PLUGIN_NAMESPACES } from "../constants";
+
+/* types */
+import { Config_I } from "../types/common.type";
+import { RegisterOptions_I, PluginsClasses_Type, PluginCollection_I } from "../types/plugins.type";
+import { Callback_I } from "../types/emitter.type";
 
 class Core {
   public COLLECTIONS: any;
@@ -69,7 +73,9 @@ class Core {
     this._registerPlugins();
     // 运行自动执行的插件
     this._runAutoPlugins();
-    // this.initiailzed();
+
+    // 监听事件
+    this._listener();
   }
 
   private _checkPlugin(plugins: PluginCollection_I) {
@@ -115,24 +121,62 @@ class Core {
     return instance;
   }
 
-  removeEvent(key: string, target: string) {
+  removeEvent(key: string, target?: string) {
     this.EMITTER.del(key, target);
     return this;
   }
 
-  on(key: string, cb: Function, target: string) {
+  on(key: string, cb: Callback_I, target?: string) {
     this.EMITTER.on(key, cb, target);
     return this;
   }
 
-  once(key: string, cb: Function, target: string) {
+  once(key: string, cb: Callback_I, target?: string) {
     this.EMITTER.once(key, cb, target);
     return this;
   }
 
-  fire(key: string, props: any[], namespace: string) {
+  fire(key: string, props: any[], namespace?: string) {
     this.EMITTER.fire(key, props, namespace);
     return this;
+  }
+
+  private _listener() {
+    const canvas = <Canvas>this.pluginInstances.canvas;
+    const el = canvas.el;
+
+    el.addEventListener("blur", e => {
+      this.fire("blur", [e]);
+    });
+    el.addEventListener("focus", e => {
+      this.fire("focus", [e]);
+    });
+    el.addEventListener("click", e => {
+      this.fire("click", [e]);
+    });
+    el.addEventListener("dblclick", e => {
+      this.fire("dbclick", [e]);
+    });
+    el.addEventListener("mousemove", e => {
+      this.fire("mousemove", [e]);
+    });
+    el.addEventListener("mousedown", e => {
+      this.fire("mousedown", [e]);
+    });
+    el.addEventListener("mouseup", e => {
+      this.fire("mouseup", [e]);
+    });
+    el.addEventListener("keydown", e => {
+      this.fire("keydown", [e]);
+    });
+    el.addEventListener("keyup", e => {
+      this.fire("keyup", [e]);
+    });
+    el.addEventListener("keypress", e => {
+      this.fire("keypress", [e]);
+      // e.stopPropagation();
+      e.preventDefault();
+    });
   }
 
   private _registerPlugins() {
@@ -146,9 +190,9 @@ class Core {
 
   private _runAutoPlugins() {
     const plugins = this.PLUGINS.getAll();
-    console.log("plugins: ", plugins);
-    for (let key of Object.keys(plugins)) {
-      const plugin = plugins[key];
+
+    for (let key of plugins.keys()) {
+      const plugin = plugins.get(key);
       const { auto, autoProps } = plugin.options;
       if (auto) this.pluginInstances[key] = this.PLUGINS.run(key, autoProps);
     }

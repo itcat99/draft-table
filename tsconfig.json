@@ -5,6 +5,7 @@
     "noImplicitAny": true,
     "module": "commonjs",
     "target": "es5",
+    "downlevelIteration": true,
     "lib": ["dom", "es6", "dom.iterable", "scripthost"]
   },
   "include": ["./src/*", "./src/modules/*", "./src/Plugins/*", "./src/helpers/*", "./src/types/*"]
