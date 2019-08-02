@@ -12,11 +12,6 @@ import StyleCollection from "./Style";
 import { Config_I, Context_I } from "../../types/common.type";
 import { Attrs_I, Context2d_I, Font_I } from "./canvas.types";
 
-interface Style_I {
-  key: string;
-  data: object;
-}
-
 type color_Type = string | CanvasGradient | CanvasPattern;
 
 class Canvas extends Plugin {
@@ -25,8 +20,6 @@ class Canvas extends Plugin {
   public ctx: Context2d_I;
   private _styleCollection: StyleCollection;
   private _currentFontStyle: Font_I;
-
-  // private _styles: Set<Style_I>;
 
   constructor(context: Context_I, options: any) {
     super(context, options);
