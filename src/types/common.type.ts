@@ -2,6 +2,7 @@ import { PluginsProps_I, PluginCollection_I } from "./plugins.type";
 import Plugins from "../modules/Plugins";
 
 export type Pos_Type = [number, number];
+export type Id_Type = Symbol | string | number;
 
 export enum TextAlign_Enum {
   LEFT = "left",
@@ -35,13 +36,18 @@ export interface Config_I {
   fontStyle: string;
   fontVariant: string;
   fontStretch: string;
-  fontWeight: number;
-  fontSize: number;
+  fontWeight: number | string;
+  fontSize: number | string;
   fontFamily: string;
-  lineHeight: number; // 字体的行高
+  lineHeight: number | string; // 字体的行高
   lineWidth: number; // 线的宽度
   textAlign: TextAlign_Enum;
   textBaseline: TextBaseline_Enum;
   plugins?: PluginCollection_I;
+  [key: string]: any;
+}
+
+export interface ComponentProps_I {
+  id?: Symbol | string | number;
   [key: string]: any;
 }

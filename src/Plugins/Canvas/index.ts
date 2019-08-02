@@ -1,12 +1,32 @@
-import { Config_I, Context_I } from "../../types/common.type";
-import { isCanvas } from "../../helpers/is";
 import Plugin from "../../modules/Plugin";
-import { Attrs_I, Context2d_I } from "./canvas.types";
+import { isCanvas } from "../../helpers/is";
+
+// components
+import Text from "../../components/Text";
+import Rect from "../../components/Rect";
+import Line from "../../components/Line";
+
+import StyleCollection from "./Style";
+
+// types
+import { Config_I, Context_I } from "../../types/common.type";
+import { Attrs_I, Context2d_I, Font_I } from "./canvas.types";
+
+interface Style_I {
+  key: string;
+  data: object;
+}
+
+type color_Type = string | CanvasGradient | CanvasPattern;
 
 class Canvas extends Plugin {
   public config: Config_I;
-  el: HTMLCanvasElement;
-  ctx: Context2d_I;
+  public el: HTMLCanvasElement;
+  public ctx: Context2d_I;
+  private _styleCollection: StyleCollection;
+  private _currentFontStyle: Font_I;
+
+  // private _styles: Set<Style_I>;
 
   constructor(context: Context_I, options: any) {
     super(context, options);
@@ -15,16 +35,236 @@ class Canvas extends Plugin {
     const { plugins, ...args } = originConfig;
 
     this.config = args;
-    this.initialized();
+
+    this._styleCollection = new StyleCollection();
+
+    this._initialized();
   }
+
+  // ============ APIS ===================
+
+  /**
+   * 设置ctx的属性，并存在Style集合列表内
+   *
+   * @author FreMaNgo
+   * @date 2019-08-01
+   * @param {Attrs_I} attrs 属性对象
+   * @param {Symbol | string} id 储存的id
+   * @memberof Canvas
+   */
+  setAttrs(attrs: Attrs_I, id: Symbol | string): Canvas {
+    this._styleCollection.add({
+      data: attrs,
+      id,
+    });
+
+    this._setAttrs(attrs, this.ctx);
+
+    return this;
+  }
+
+  /**
+   * 清除区域 如果没有变量，则清除整个画布
+   *
+   * @author FreMaNgo
+   * @date 2019-08-02
+   * @param {number} [x] x坐标
+   * @param {number} [y] y坐标
+   * @param {number} [w] 宽
+   * @param {number} [h] 高
+   * @returns {Canvas} 返回当前实例
+   * @memberof Canvas
+   */
+  clear(x?: number, y?: number, w?: number, h?: number): Canvas {
+    const { canvas } = this.ctx;
+
+    x = x | 0;
+    y = y | 0;
+    w = w | canvas.width;
+    h = h | canvas.height;
+
+    this.ctx.clearRect(x, y, w, h);
+    return this;
+  }
+
+  /**
+   * 绘制线条
+   *
+   * @author FreMaNgo
+   * @date 2019-08-01
+   * @param {Line[]} lines 一个子项为Line类的数组
+   * @returns {Canvas} 返回当前实例
+   * @memberof Canvas
+   */
+  drawLine(lines: Line[]): Canvas {
+    if (!lines.length) return;
+
+    this.ctx.beginPath();
+    lines.forEach(line => {
+      const { from, to } = line.getPos();
+      this.ctx.moveTo(...from);
+      this.ctx.lineTo(...to);
+    });
+    this.ctx.stroke();
+
+    return this;
+  }
+
+  /**
+   * 绘制矩形
+   *
+   * @author FreMaNgo
+   * @date 2019-08-01
+   * @param {Rect[]} rects 一个子项为Rect类的数组
+   * @returns {Canvas} 返回当前实例
+   * @memberof Canvas
+   */
+  drawRect(rects: Rect[]): Canvas {
+    if (!rects.length) return;
+
+    rects.forEach(rect => {
+      const { pos, width, height } = rect.get();
+      const [x, y] = pos;
+
+      this.ctx.fillRect(x, y, width, height);
+    });
+
+    return this;
+  }
+
+  /**
+   * 绘制文字
+   *
+   * @author FreMaNgo
+   * @date 2019-08-01
+   * @param {Text[]} texts 一个子项为Text类的数组
+   * @returns {Canvas} 返回当前实例
+   * @memberof Canvas
+   */
+  drawText(texts: Text[]): Canvas {
+    if (!texts.length) return;
+
+    texts.forEach(text => {
+      const { pos, value } = text.get();
+      this.ctx.fillText(value, ...pos);
+    });
+
+    return this;
+  }
+
+  /**
+   * 设置字体、区域填充的颜色
+   *
+   * @author FreMaNgo
+   * @date 2019-08-02
+   * @param {color_Type} color ctx上下文可接受的颜色值或对象
+   * @param {Symbol | string} id
+   * @returns {Canvas} 返回当前实例
+   * @memberof Canvas
+   */
+  color(color: color_Type, id?: Symbol | string): Canvas {
+    return this._color(color, false, id);
+  }
+
+  /**
+   * 设置线条颜色
+   *
+   * @author FreMaNgo
+   * @date 2019-08-02
+   * @param {color_Type} color ctx上下文可接受的颜色值或对象
+   * @param {Symbol | string} id
+   * @returns {Canvas} 返回当前实例
+   * @memberof Canvas
+   */
+  lineColor(color: color_Type, id?: Symbol | string): Canvas {
+    return this._color(color, true, id);
+  }
+
+  /**
+   * 设置线宽度
+   *
+   * @author FreMaNgo
+   * @date 2019-08-02
+   * @param {number} lineWidth 线宽 单位px
+   * @param {Symbol | string} id
+   * @returns
+   * @memberof Canvas 返回当前实例
+   */
+  lineWidth(lineWidth: number, id: Symbol | string): Canvas {
+    const style = { lineWidth };
+    return this.setAttrs(style, id);
+  }
+
+  /**
+   * 设置font属性
+   *
+   * @author FreMaNgo
+   * @date 2019-08-02
+   * @param {Font_I} opts
+   * @param {(Symbol | string)} id
+   * @returns {Canvas}
+   * @memberof Canvas
+   */
+  font(opts: Font_I, id?: Symbol | string): Canvas {
+    this._currentFontStyle = Object.assign({}, this._currentFontStyle, opts);
+    const font = { font: this._normailzeFont(this._currentFontStyle) };
+    console.log("font: ", font);
+    return this.setAttrs(font, id);
+  }
+
+  /**
+   * 回到上一个保存的style状态
+   *
+   * @author FreMaNgo
+   * @date 2019-08-01
+   * @returns {Canvas} 返回当前实例
+   * @memberof Canvas
+   */
+  prevStyle(): Canvas {
+    const style = this._styleCollection.prev();
+    this._setAttrs(style, this.ctx);
+
+    return this;
+  }
+
+  /**
+   * 回到下一个保存的style状态
+   *
+   * @author FreMaNgo
+   * @date 2019-08-02
+   * @returns {Canvas}
+   * @memberof Canvas
+   */
+  nextStyle(): Canvas {
+    const style = this._styleCollection.next();
+    this._setAttrs(style, this.ctx);
+
+    return this;
+  }
+
+  /**
+   * 回到选择的style状态
+   *
+   * @author FreMaNgo
+   * @date 2019-08-02
+   * @param {(number | Symbol | string)} key 选择的key， 可以是index或者id
+   * @returns {Canvas}
+   * @memberof Canvas
+   */
+  popStyle(key: number | Symbol | string): Canvas {
+    const style = this._styleCollection.pop(key);
+    this._setAttrs(style, this.ctx);
+    return this;
+  }
+
+  // ============ PRIVATE METHODS ============
 
   /**
    * 初始化
    * 1. 新建canvas到DOM
    * 2. 格式化ctx的各项属性
    */
-  initialized() {
-    console.log("canvas");
+  private _initialized() {
     const { width, height, target, ratio, ...styles } = this.config;
 
     if (isCanvas(target)) {
@@ -68,13 +308,56 @@ class Canvas extends Plugin {
       ...args
     } = styles;
 
-    const font = `${fontStyle} ${fontVariant} ${fontWeight} ${fontStretch} ${fontSize}px/${lineHeight}px ${fontFamily}`;
-    this.setAttrs({ font }, this.ctx);
+    this._currentFontStyle = {
+      size: fontSize,
+      family: fontFamily,
+      lineHeight,
+      weight: fontWeight,
+      style: fontStyle,
+      variant: fontVariant,
+      stretch: fontStretch,
+    };
 
-    this.setAttrs({ font, ...args }, this.ctx);
+    const font = this._normailzeFont(this._currentFontStyle);
+
+    this.setAttrs({ font, ...args }, "_INIT_");
   }
 
-  setAttrs(attrs: Attrs_I, ctx: Context2d_I) {
+  private _normailzeFont(opts: Font_I) {
+    const { variant, weight, stretch, family, style, lineHeight } = opts;
+    let { size } = opts;
+
+    if (typeof size === "number") size = `${size}px`;
+
+    return `${style} ${variant} ${weight} ${stretch} ${size}/${lineHeight} ${family}`;
+  }
+
+  /**
+   * 设置canvas颜色
+   *
+   * @author FreMaNgo
+   * @date 2019-08-01
+   * @param {(string | CanvasGradient | CanvasPattern)} color ctx上下文可接受的颜色值或对象
+   * @param {boolean} stroke 如果为true，则设置描边色。默认为填充色
+   * @param {Symbol | string} id
+   * @returns {Canvas} 返回当前实例
+   * @memberof Canvas
+   */
+  private _color(color: color_Type, stroke?: boolean, id?: Symbol | string): Canvas {
+    const style = stroke ? { strokeStyle: color } : { fillStyle: color };
+    return this.setAttrs(style, id);
+  }
+
+  /**
+   * 设置ctx的属性
+   *
+   * @author FreMaNgo
+   * @date 2019-08-01
+   * @param {Attrs_I} attrs 属性对象
+   * @param {Context2d_I} ctx canvas的context2d上下文
+   * @memberof Canvas
+   */
+  private _setAttrs(attrs: Attrs_I, ctx: Context2d_I) {
     for (let key of Object.keys(attrs)) {
       const val = attrs[key];
       ctx[key] = val;
@@ -82,67 +365,6 @@ class Canvas extends Plugin {
 
     ctx.save();
   }
-
-  // setAttrs(props, ctx) {
-  //   for (let key of Object.keys(props)) {
-  //     const val = props[key];
-
-  //     ctx[key] = val;
-  //   }
-
-  //   ctx.save();
-  // }
-
-  /**
-   * 绘制线条
-   * @param {line[]} lines 一个子项为line结构的数组
-   * @return {CanvasRenderingContext2D} 返回当前的ctx上下文
-   */
-  // drawLine(lines) {
-  //   if (!lines.length) return false;
-
-  //   this.ctx.beginPath();
-  //   lines.forEach(line => {
-  //     const { from, to } = line.get();
-  //     this.ctx.moveTo(...from);
-  //     this.ctx.lineTo(...to);
-  //   });
-  //   this.ctx.stroke();
-
-  //   return this.ctx;
-  // }
-
-  /**
-   * 绘制矩形
-   * @param {rect[]} rects 一个子项为rect结构的数组
-   * @return {CanvasRenderingContext2D} 返回当前的ctx上下文
-   */
-  // drawRect(rects) {
-  //   if (!rects.length) return false;
-
-  //   rects.forEach(rect => {
-  //     const { pos, width, height } = rect.get();
-  //     this.ctx.fillRect(...pos, width, height);
-  //   });
-
-  //   return this.ctx;
-  // }
-
-  /**
-   * 绘制文字
-   * @param {text[]} texts 一个子项为text结构的数组
-   * @return {CanvasRenderingContext2D} 返回当前的ctx上下文
-   */
-  // drawText(texts) {
-  //   if (!texts.length) return false;
-
-  //   texts.forEach(text => {
-  //     const { pos, value } = text.get();
-  //     this.ctx.fillText(value, ...pos);
-  //   });
-
-  //   return this.ctx;
-  // }
 }
 
 export default Canvas;

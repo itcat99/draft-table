@@ -14,7 +14,7 @@ const CONFIG: Config_I = {
   fontWeight: 400,
   fontSize: 16,
   fontFamily: getFontFamily(),
-  lineHeight: 16, // 字体的行高
+  lineHeight: "16px", // 字体的行高
   lineWidth: 1, // 线的宽度
   textAlign: TextAlign_Enum.LEFT,
   textBaseline: TextBaseline_Enum.TOP,

@@ -1,5 +1,6 @@
-import { Context_I } from "../types/common.type";
 import Emitter from "../modules/Emitter";
+
+import { Context_I } from "../types/common.type";
 import { Callback_I } from "../types/emitter.type";
 
 class Plugin {
@@ -10,6 +11,7 @@ class Plugin {
     this._emitter = this.context.emitter;
     this.namespace = this.options.namespace;
   }
+
   setState() {}
   didUpdate() {}
 

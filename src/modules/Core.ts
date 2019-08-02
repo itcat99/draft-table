@@ -26,6 +26,8 @@ class Core {
     [namespace: string]: Plugin;
   };
 
+  public canvas: Canvas;
+
   /**
    * 初始化：emitter,plugins,collection,store,err
    * 注册全局监听
@@ -73,6 +75,9 @@ class Core {
     this._registerPlugins();
     // 运行自动执行的插件
     this._runAutoPlugins();
+
+    // 将内置插件的实例绑定到Core上
+    this._bindInsidePlugin();
 
     // 监听事件
     this._listener();
@@ -141,9 +146,13 @@ class Core {
     return this;
   }
 
+  private _bindInsidePlugin() {
+    // canvas 插件
+    this.canvas = <Canvas>this.pluginInstances.canvas;
+  }
+
   private _listener() {
-    const canvas = <Canvas>this.pluginInstances.canvas;
-    const el = canvas.el;
+    const el = this.canvas.el;
 
     el.addEventListener("wheel", e => {
       this.fire("wheel", [e]);
