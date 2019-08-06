@@ -14,12 +14,19 @@ import { Attrs_I, Context2d_I, Font_I } from "./canvas.types";
 
 type color_Type = string | CanvasGradient | CanvasPattern;
 
+interface SetAttrsOptions_I {
+  id?: string;
+  cb?: Function;
+  once?: boolean;
+}
+
 class Canvas extends Plugin {
   public config: Config_I;
   public el: HTMLCanvasElement;
   public ctx: Context2d_I;
   private _styleCollection: StyleCollection;
   private _currentFontStyle: Font_I;
+  private _ratio: number;
 
   constructor(context: Context_I, options: any) {
     super(context, options);
@@ -35,7 +42,6 @@ class Canvas extends Plugin {
   }
 
   // ============ APIS ===================
-
   /**
    * 设置ctx的属性，并存在Style集合列表内
    *
@@ -45,13 +51,41 @@ class Canvas extends Plugin {
    * @param {Symbol | string} id 储存的id
    * @memberof Canvas
    */
-  setAttrs(attrs: Attrs_I, id: Symbol | string): Canvas {
-    this._styleCollection.add({
-      data: attrs,
-      id,
-    });
 
-    this._setAttrs(attrs, this.ctx);
+  /**
+   * 设置ctx的属性，并存在Style集合列表内
+   * 如果配置了once，则设置的属性只生效一次，完成后设置的属性将会回滚
+   * 如果配置了once和id，则生效一次，并回滚到id指定的属性
+   *
+   * @author FreMaNgo
+   * @date 2019-08-06
+   * @param {Attrs_I} attrs
+   * @param {SetAttrsOptions_I} [opts]
+   * @returns {Canvas}
+   * @memberof Canvas
+   */
+  setAttrs(attrs: Attrs_I, opts?: SetAttrsOptions_I): Canvas {
+    opts = opts || {};
+    const { once, cb, id } = opts;
+
+    if (once) {
+      let cacheColorId = this._styleCollection.now().id;
+
+      if (id && this._styleCollection.has(id)) {
+        cacheColorId = id;
+      }
+      this._setAttrs(attrs, this.ctx);
+      cb();
+      this._setAttrs(this._styleCollection.get(cacheColorId), this.ctx);
+    } else {
+      id &&
+        this._styleCollection.add({
+          data: attrs,
+          id,
+        });
+
+      this._setAttrs(attrs, this.ctx);
+    }
 
     return this;
   }
@@ -71,10 +105,10 @@ class Canvas extends Plugin {
   clear(x?: number, y?: number, w?: number, h?: number): Canvas {
     const { canvas } = this.ctx;
 
-    x = x | 0;
-    y = y | 0;
-    w = w | canvas.width;
-    h = h | canvas.height;
+    x = x || 0;
+    y = y || 0;
+    w = w || canvas.width;
+    h = h || canvas.height;
 
     this.ctx.clearRect(x, y, w, h);
     return this;
@@ -149,90 +183,60 @@ class Canvas extends Plugin {
    * 设置字体、区域填充的颜色
    *
    * @author FreMaNgo
-   * @date 2019-08-02
+   * @date 2019-08-06
    * @param {color_Type} color ctx上下文可接受的颜色值或对象
-   * @param {Symbol | string} id
-   * @returns {Canvas} 返回当前实例
+   * @param {SetAttrsOptions_I} opts
+   * @returns {Canvas}
    * @memberof Canvas
    */
-  color(color: color_Type, id?: Symbol | string): Canvas {
-    return this._color(color, false, id);
+  color(color: color_Type, opts?: SetAttrsOptions_I): Canvas {
+    return this._color(color, opts, false);
   }
 
   /**
    * 设置线条颜色
    *
    * @author FreMaNgo
-   * @date 2019-08-02
+   * @date 2019-08-06
    * @param {color_Type} color ctx上下文可接受的颜色值或对象
-   * @param {Symbol | string} id
-   * @returns {Canvas} 返回当前实例
+   * @param {SetAttrsOptions_I} opts
+   * @returns {Canvas}
    * @memberof Canvas
    */
-  lineColor(color: color_Type, id?: Symbol | string): Canvas {
-    return this._color(color, true, id);
+  lineColor(color: color_Type, opts?: SetAttrsOptions_I): Canvas {
+    return this._color(color, opts, true);
   }
 
   /**
    * 设置线宽度
    *
    * @author FreMaNgo
-   * @date 2019-08-02
+   * @date 2019-08-06
    * @param {number} lineWidth 线宽 单位px
-   * @param {Symbol | string} id
-   * @returns
-   * @memberof Canvas 返回当前实例
+   * @param {SetAttrsOptions_I} opts
+   * @returns {Canvas}
+   * @memberof Canvas
    */
-  lineWidth(lineWidth: number, id: Symbol | string): Canvas {
+  lineWidth(lineWidth: number, opts?: SetAttrsOptions_I): Canvas {
     const style = { lineWidth };
-    return this.setAttrs(style, id);
+    return this.setAttrs(style, opts);
   }
 
   /**
    * 设置font属性
    *
    * @author FreMaNgo
-   * @date 2019-08-02
-   * @param {Font_I} opts
-   * @param {(Symbol | string)} id
+   * @date 2019-08-06
+   * @param {Font_I} config
+   * @param {SetAttrsOptions_I} opts
    * @returns {Canvas}
    * @memberof Canvas
    */
-  font(opts: Font_I, id?: Symbol | string): Canvas {
-    this._currentFontStyle = Object.assign({}, this._currentFontStyle, opts);
+  font(config: Font_I, opts?: SetAttrsOptions_I): Canvas {
+    this._currentFontStyle = Object.assign({}, this._currentFontStyle, config);
     const font = { font: this._normailzeFont(this._currentFontStyle) };
-    console.log("font: ", font);
-    return this.setAttrs(font, id);
-  }
 
-  /**
-   * 回到上一个保存的style状态
-   *
-   * @author FreMaNgo
-   * @date 2019-08-01
-   * @returns {Canvas} 返回当前实例
-   * @memberof Canvas
-   */
-  prevStyle(): Canvas {
-    const style = this._styleCollection.prev();
-    this._setAttrs(style, this.ctx);
-
-    return this;
-  }
-
-  /**
-   * 回到下一个保存的style状态
-   *
-   * @author FreMaNgo
-   * @date 2019-08-02
-   * @returns {Canvas}
-   * @memberof Canvas
-   */
-  nextStyle(): Canvas {
-    const style = this._styleCollection.next();
-    this._setAttrs(style, this.ctx);
-
-    return this;
+    return this.setAttrs(font, opts);
   }
 
   /**
@@ -244,10 +248,28 @@ class Canvas extends Plugin {
    * @returns {Canvas}
    * @memberof Canvas
    */
-  popStyle(key: number | Symbol | string): Canvas {
+  popStyle(key: string): Canvas {
     const style = this._styleCollection.pop(key);
-    this._setAttrs(style, this.ctx);
+    if (!style) return this;
+    this._setAttrs(<object>style, this.ctx);
     return this;
+  }
+
+  /**
+   * 设置canvas的尺寸
+   *
+   * @author FreMaNgo
+   * @date 2019-08-05
+   * @param {number} width 宽度 单位px
+   * @param {number} height 高度 单位px
+   * @memberof Canvas
+   */
+  setSize(width: number, height: number) {
+    this.el.width = width * this._ratio;
+    this.el.height = height * this._ratio;
+    this.el.setAttribute("style", `width: ${width}px; height: ${height}px;`);
+    this.ctx.scale(this._ratio, this._ratio);
+    this.fire("resize", [{ width, height }]);
   }
 
   // ============ PRIVATE METHODS ============
@@ -260,19 +282,13 @@ class Canvas extends Plugin {
   private _initialized() {
     const { width, height, target, ratio, ...styles } = this.config;
 
-    if (isCanvas(target)) {
-      target.setAttribute("style", `width: ${width}px; height: ${height}px;`);
-      (<HTMLCanvasElement>target).width = width * ratio;
-      (<HTMLCanvasElement>target).height = height * ratio;
+    this._ratio = ratio;
 
+    if (isCanvas(target)) {
       this.el = <HTMLCanvasElement>target;
       this.ctx = this.el.getContext("2d");
     } else {
       const el = document.createElement("canvas");
-      el.width = width * ratio;
-      el.height = height * ratio;
-      el.setAttribute("style", `width: ${width}px; height: ${height}px;`);
-
       const ctx = el.getContext("2d");
       const scriptEl = target.querySelector("script");
 
@@ -287,7 +303,7 @@ class Canvas extends Plugin {
       this.ctx = ctx;
     }
 
-    this.ctx.scale(ratio, ratio);
+    this.setSize(width, height);
 
     // set init attrs
     const {
@@ -313,7 +329,8 @@ class Canvas extends Plugin {
 
     const font = this._normailzeFont(this._currentFontStyle);
 
-    this.setAttrs({ font, ...args }, "_INIT_");
+    this.setAttrs({ font, ...args }, { id: "_INIT_" });
+    this.fire("initialized", []);
   }
 
   private _normailzeFont(opts: Font_I) {
@@ -336,9 +353,9 @@ class Canvas extends Plugin {
    * @returns {Canvas} 返回当前实例
    * @memberof Canvas
    */
-  private _color(color: color_Type, stroke?: boolean, id?: Symbol | string): Canvas {
+  private _color(color: color_Type, opts?: SetAttrsOptions_I, stroke?: boolean): Canvas {
     const style = stroke ? { strokeStyle: color } : { fillStyle: color };
-    return this.setAttrs(style, id);
+    return this.setAttrs(style, opts);
   }
 
   /**

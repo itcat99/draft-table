@@ -1,21 +1,17 @@
-interface BasicStyle_I {
-  id?: Symbol | string;
+type Key_Type = string;
+
+interface Style_I {
+  id: Key_Type;
   data: any;
 }
 
-interface Style_I extends BasicStyle_I {
-  index: number;
-}
-
-type Key_Type = number | string | Symbol;
-
 class Style {
-  private _index: number;
-  private _collection: Array<Style_I>;
+  private _collection: Map<Key_Type, any>;
+  private _current: string;
 
   constructor() {
-    this._index = 0;
-    this._collection = [];
+    this._current = "";
+    this._collection = new Map();
   }
 
   /**
@@ -28,13 +24,11 @@ class Style {
    * @memberof Style
    */
 
-  add(style: BasicStyle_I): Style {
-    if (!style.id) style.id = Symbol();
-    const size = this._collection.length;
+  add(style: Style_I): Style {
+    const { id, data } = style;
+    this._collection.set(id, data);
+    this._current = id;
 
-    this._index = this._normailzeIndex(size);
-
-    this._collection.push(Object.assign({}, style, { index: this._index }));
     return this;
   }
 
@@ -48,109 +42,24 @@ class Style {
    * @memberof Style
    */
   del(key: Key_Type): Style {
-    const style = this._search(key);
-    const { index: styleIndex } = style;
+    this._collection.delete(key);
 
-    const beforeArr = this._collection.slice(0, styleIndex);
-    let afterArr = this._collection.slice(styleIndex + 1);
-    afterArr = afterArr.map(item => {
-      item.index = this._normailzeIndex(item.index - 1);
-      return item;
-    });
-
-    this._collection = [].concat(beforeArr, afterArr);
-    this._index = this._normailzeIndex(this._index);
     return this;
   }
 
   /**
-   * 查找样式
+   * 获取当前的style
    *
    * @author FreMaNgo
    * @date 2019-08-02
-   * @private
-   * @param {Key_Type} key 样式的key  可以是index或者id
-   * @returns {Style_I} 返回查找到的样式
+   * @returns {Style_I} 返回style
    * @memberof Style
    */
-  private _search(key: Key_Type): Style_I {
-    for (let index = 0; index < this._collection.length; index++) {
-      const style = this._collection[index];
-
-      if (typeof key === "number" && key === index) return style;
-      if (style.id === key) return style;
-    }
-  }
-
-  /**
-   * 格式化当前的index
-   *
-   * @author FreMaNgo
-   * @date 2019-08-02
-   * @private
-   * @param {number} index index的值
-   * @returns {number} 返回格式化的index数值
-   * @memberof Style
-   */
-  private _normailzeIndex(index: number): number {
-    const maxSize = this._collection.length;
-    const minSize = 0;
-
-    return Math.max(Math.min(maxSize, index), minSize);
-  }
-
-  /**
-   * 获取上一个储存的style
-   *
-   * @author FreMaNgo
-   * @date 2019-08-02
-   * @returns {object} 返回style
-   * @memberof Style
-   */
-  prev(): object {
-    const currentIndex = this._normailzeIndex(this._index - 1);
-    this._index = currentIndex;
-
-    return this._search(currentIndex).data;
-  }
-
-  /**
-   * 获取下一个储存的style
-   *
-   * @author FreMaNgo
-   * @date 2019-08-02
-   * @returns {object} 返回style
-   * @memberof Style
-   */
-  next(): object {
-    const currentIndex = this._normailzeIndex(this._index + 1);
-    this._index = currentIndex;
-
-    return this._search(currentIndex).data;
-  }
-
-  /**
-   * 获取当前的值
-   *
-   * @author FreMaNgo
-   * @date 2019-08-02
-   * @returns {object} 返回style
-   * @memberof Style
-   */
-  now(): object {
-    return this._collection[this._index].data;
-  }
-
-  /**
-   * 获取集合所有内容
-   *
-   * @author FreMaNgo
-   * @date 2019-08-02
-   * @returns {Array<Style_I>} 返回集合
-   * @memberof Style
-   */
-  all(): Array<Style_I> {
-    return this._collection;
+  now(): Style_I {
+    return {
+      id: this._current,
+      data: this._collection.get(this._current),
+    };
   }
 
   /**
@@ -161,24 +70,54 @@ class Style {
    * @memberof Style
    */
   clear() {
-    this._collection = [];
+    this._collection.clear();
   }
 
   /**
-   * 获取指定的style
+   * 获取指定id 的内容
+   *
+   * @author FreMaNgo
+   * @date 2019-08-06
+   * @param {string} [id] id
+   * @returns {(object}
+   * @memberof Style
+   */
+  get(id: string): object {
+    return this._collection.get(id);
+  }
+
+  has(id: string): boolean {
+    return this._collection.has(id);
+  }
+
+  /**
+   * 获取集合所有内容
    *
    * @author FreMaNgo
    * @date 2019-08-02
-   * @param {Key_Type} key 样式的key  可以是index或者id
+   * @returns {Array<Style_I>} 返回集合
+   * @memberof Style
+   */
+  getAll(): Map<Key_Type, object> {
+    return this._collection;
+  }
+
+  /**
+   * 获取指定的样式，并将当前的id指向传入的id
+   *
+   * @author FreMaNgo
+   * @date 2019-08-02
+   * @param {Key_Type} id 样式的id
    * @returns {object} 返回style
    * @memberof Style
    */
-  pop(key: Key_Type): object {
-    const style = this._search(key);
-    const { index, data } = style;
+  pop(id: Key_Type): object {
+    const data = this.get(id);
 
-    this._index = this._normailzeIndex(index);
-    return data;
+    if (data) {
+      this._current = id;
+      return data;
+    }
   }
 }
 

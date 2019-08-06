@@ -4,13 +4,13 @@
 
 ## Members
 
-### vBar
+### vScrollbar
 
 类型：boolean
 
 描述：是否开启纵向滚动条
 
-### hBar
+### hScrollbar
 
 类型：boolean
 
@@ -32,37 +32,37 @@
 
 类型：number
 
-描述：纵向 bar 的高度
+描述：纵向 bar 的高度 单位 px
 
 ### hSize
 
 类型：number
 
-描述：横向 bar 的宽度
+描述：横向 bar 的宽度 单位 px
 
 ### weight
 
 类型：number
 
-描述：横向滚动条的高度 && 纵向滚动条的宽度
+描述：横向滚动条的高度 && 纵向滚动条的宽度 单位 px
 
 ### barWeight
 
 类型：number
 
-描述：横向 bar 的高度 && 纵向 bar 的宽度
+描述：横向 bar 的高度 && 纵向 bar 的宽度 单位 px
 
 ### delay
 
 类型：number
 
-描述：滚动条淡出延迟
+描述：滚动条淡出延迟，单位 ms
 
 ### opacity
 
 类型：number
 
-描述：没有触发时，滚动条透明度
+描述：没有触发时，滚动条透明度 [0 - 1]
 
 ### fixed
 

@@ -12,4 +12,5 @@ export interface Callback_I {
   (...props: any[]): void;
 }
 
-export type Events_Type = Map<string, Event_I>;
+export type EventsCollection_Type = Map<string, Events_Type>;
+export type Events_Type = Map<string, Array<Event_I>>;

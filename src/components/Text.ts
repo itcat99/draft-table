@@ -18,6 +18,14 @@ class Text extends Component {
     return this._pos;
   }
 
+  setPos({ x, y }: { x?: number; y?: number }) {
+    const nextX = x || this._pos[0];
+    const nextY = y || this._pos[1];
+
+    const pos: Pos_Type = [nextX, nextY];
+    this._pos = pos;
+  }
+
   getValue() {
     return this._value;
   }

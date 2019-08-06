@@ -1,4 +1,4 @@
-import { EventType_Enum, Events_Type, Callback_I } from "../types/emitter.type";
+import { EventType_Enum, EventsCollection_Type, Callback_I } from "../types/emitter.type";
 
 /**
  * 实现了自定义事件
@@ -12,7 +12,7 @@ import { EventType_Enum, Events_Type, Callback_I } from "../types/emitter.type";
  * @class Emitter
  */
 class Emitter {
-  events: Events_Type;
+  events: EventsCollection_Type;
 
   constructor() {
     this.events = new Map();
@@ -58,14 +58,33 @@ class Emitter {
    * @param {string|undefined} namespace 命名空间
    * @memberof Emitter
    */
-  private registerEvent(key: string, cb: Callback_I, type: EventType_Enum, namespace?: string) {
+  private registerEvent(
+    key: string,
+    cb: Callback_I,
+    type: EventType_Enum,
+    namespace: string = "_GLOBAL_",
+  ) {
     const event = {
       type,
       cb,
     };
+    namespace = namespace || "_GLOBAL_";
+    const collection = this.events.get(namespace);
 
-    const name = namespace ? `${namespace}::${key}` : key;
-    this.events.set(name, event);
+    if (collection) {
+      const events = collection.get(key);
+      if (events) {
+        events.push(event);
+        collection.set(key, events);
+      } else {
+        collection.set(key, [event]);
+      }
+    } else {
+      const newCollection = new Map();
+
+      newCollection.set(key, [event]);
+      this.events.set(namespace, newCollection);
+    }
   }
 
   /**
@@ -77,20 +96,29 @@ class Emitter {
    * @param {string} namespace 命名空间
    * @memberof Emitter
    */
-  del(key: string, namespace?: string) {
-    const name = namespace ? `${namespace}::${key}` : key;
-    this.events.delete(name);
+  del(key: string, namespace: string = "_GLOBAL_") {
+    const collection = this.events.get(namespace);
+
+    if (collection) {
+      collection.delete(key);
+    }
   }
 
   /**
-   * 清空所有事件
+   * 清空所有事件，如果传入namespace，则清除这个namespace下的事件
    *
    * @author FreMaNgo
-   * @date 2019-07-25
+   * @date 2019-08-05
+   * @param {string} namespace
    * @memberof Emitter
    */
-  clear() {
-    this.events.clear();
+  clear(namespace: string) {
+    if (namespace) {
+      const collection = this.events.get(namespace);
+      collection.clear();
+    } else {
+      this.events.clear();
+    }
   }
 
   /**
@@ -103,22 +131,31 @@ class Emitter {
    * @param {string|undefined} namespace 命名空间
    * @memberof Emitter
    */
-  fire(key: string, props: any[], namespace?: string) {
-    const name = namespace ? `${namespace}::${key}` : key;
-    const event = this.events.get(name);
+  fire(key: string, props: any[], namespace: string = "_GLOBAL_") {
+    const collection = this.events.get(namespace);
 
-    if (event) {
-      const { type, cb } = event;
-      switch (type) {
-        case EventType_Enum.ON:
-          cb && cb(...props);
-          break;
-        case EventType_Enum.ONCE:
-          cb && cb(...props);
-          this.del(name);
-          break;
-        default:
-          break;
+    if (collection) {
+      let events = collection.get(key);
+
+      if (events) {
+        events = events
+          .map(event => {
+            const { type, cb } = event;
+
+            switch (type) {
+              case EventType_Enum.ON:
+                cb && cb(...props);
+                return event;
+              case EventType_Enum.ONCE:
+                cb && cb(...props);
+                break;
+              default:
+                break;
+            }
+          })
+          .filter(item => item);
+
+        collection.set(key, events);
       }
     }
   }

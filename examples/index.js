@@ -1,4 +1,4 @@
-import DraftTable, { Line, Text, Rect } from "../src/index";
+import DraftTable, { Line, Text, Rect, Plugin } from "../src/index";
 import { Random } from "mockjs";
 
 function createLines(count) {
@@ -24,24 +24,13 @@ const rect = new Rect({ pos: [200, 200], width: 100, height: 150 });
 const rect2 = new Rect({ pos: [100, 100], width: 50, height: 50 });
 const canvas = table.canvas;
 
-// table.on("wheel", () => {
-//   // window.requestAnimationFrame(drawLines);
-//   drawLines();
-// });
-
-// function drawLines() {
-//   const lines = createLines(1000);
-//   canvas.drawLine(lines);
-// }
-
 canvas
-  .lineColor("#ff0000")
-  .drawLine([line])
-  .prevStyle()
-  .drawLine([line2])
+  .lineColor("#ff0000", { id: "line1" })
   .drawText([text])
-  .color("#f011ff", "color1")
+  .drawLine([line])
+  .color("#f011ff", { id: "color1" })
   .font({ size: 25, lineHeight: "25px" })
+  .drawLine([line2])
   .drawText([text2])
   .color("rgba(0,0,0,.5)")
   .drawRect([rect])

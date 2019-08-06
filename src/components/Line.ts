@@ -16,6 +16,11 @@ class Line extends Component {
   getPos() {
     return { from: this._from, to: this._to };
   }
+
+  setPos(from: Pos_Type, to: Pos_Type) {
+    this._from = from;
+    this._to = to;
+  }
 }
 
 export default Line;

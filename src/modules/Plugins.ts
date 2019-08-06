@@ -76,7 +76,7 @@ class Plugins {
   }
 
   /**
-   * 获取指定插件的实例
+   * 获取指定插件的类
    *
    * @author FreMaNgo
    * @date 2019-07-25
@@ -90,7 +90,7 @@ class Plugins {
 
   /**
    * 获取所有插件
-   * 返回已注册的所有插件的实例集合
+   * 返回已注册的所有插件的类集合
    *
    * @author FreMaNgo
    * @date 2019-07-25
@@ -99,6 +99,32 @@ class Plugins {
    */
   getAll(): PluginsClasses_Type {
     return this._plugins;
+  }
+
+  /**
+   * 获取指定插件的实例
+   *
+   * @author FreMaNgo
+   * @date 2019-08-05
+   * @template T
+   * @param {string} name 插件名
+   * @returns {(T | Plugin)}
+   * @memberof Plugins
+   */
+  getInstance<T>(name: string): T | Plugin {
+    return this._instances.get(name);
+  }
+
+  /**
+   * 获取所有已初始化的插件的实例
+   *
+   * @author FreMaNgo
+   * @date 2019-08-05
+   * @returns {PluginsInstances_Type}
+   * @memberof Plugins
+   */
+  getAllInstances(): PluginsInstances_Type {
+    return this._instances;
   }
 
   /**

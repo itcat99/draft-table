@@ -4,10 +4,11 @@ import Plugin from "./Plugin";
 import Err from "./Err";
 
 import DEFAULT_PROPS from "../config";
-import { INSIDE_PLUGIN_NAMESPACES } from "../constants";
+import { INTERNAL_PLUGIN_NAMESPACES } from "../constants";
 
-/* inside Plugins */
+/* internal Plugins */
 import Canvas from "../Plugins/Canvas";
+import Scrollbar from "../Plugins/Scrollbar";
 
 /* types */
 import { Config_I } from "../types/common.type";
@@ -27,6 +28,7 @@ class Core {
   };
 
   public canvas: Canvas;
+  public scrollbar: Scrollbar;
 
   /**
    * 初始化：emitter,plugins,collection,store,err
@@ -40,7 +42,7 @@ class Core {
     this.pluginInstances = {};
 
     // 内置模块
-    const InsidePlugins = {
+    const internalPlugins = {
       canvas: {
         class: Canvas,
         options: {
@@ -48,9 +50,16 @@ class Core {
           auto: true,
         },
       },
+      scrollbar: {
+        class: Scrollbar,
+        options: {
+          namespace: "scrollbar",
+          auto: true,
+        },
+      },
     };
 
-    let plugins = { ...InsidePlugins };
+    let plugins = { ...internalPlugins };
     if (props && props.plugins) {
       this._checkPlugin(props.plugins);
 
@@ -85,9 +94,9 @@ class Core {
 
   private _checkPlugin(plugins: PluginCollection_I) {
     for (let key of Object.keys(plugins)) {
-      if (INSIDE_PLUGIN_NAMESPACES.indexOf(key) < 0) {
+      if (INTERNAL_PLUGIN_NAMESPACES.indexOf(key) < 0) {
         this.ERR.pop(
-          `please checked register plugin's namespace, [${INSIDE_PLUGIN_NAMESPACES}] list is not use.`,
+          `please checked register plugin's namespace, [${INTERNAL_PLUGIN_NAMESPACES}] list is not use.`,
         );
       }
     }
@@ -148,7 +157,8 @@ class Core {
 
   private _bindInsidePlugin() {
     // canvas 插件
-    this.canvas = <Canvas>this.pluginInstances.canvas;
+    this.canvas = <Canvas>this.PLUGINS.getInstance("canvas");
+    this.scrollbar = <Scrollbar>this.PLUGINS.getInstance("scrollbar");
   }
 
   private _listener() {

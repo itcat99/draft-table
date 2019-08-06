@@ -34,6 +34,7 @@ module.exports = {
   devServer: {
     hot: true,
     contentBase: output,
+    host: "0.0.0.0",
   },
   plugins: [new htmlPlugin(), new webpack.HotModuleReplacementPlugin()],
 };
