@@ -1,4 +1,4 @@
-import { Emitters_I, EventTypes_Enum, Event_I } from "../types/emitter.type";
+import { Emitters_I, EventTypes_Enum, Event_I } from "types/emitter.type";
 
 class Emitter {
   private _emitters: Emitters_I;

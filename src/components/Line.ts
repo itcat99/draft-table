@@ -1,6 +1,6 @@
-import { Line_I } from "../Plugins/Canvas/canvas.types";
-import { Pos_Type } from "../types/common.type";
-import Component from "../modules/Component";
+import { Line_I } from "types/plugins/canvas.types";
+import { Pos_Type } from "types/common.type";
+import Component from "modules/Component";
 
 class Line extends Component {
   private _from: Pos_Type;

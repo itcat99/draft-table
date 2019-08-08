@@ -1,6 +1,5 @@
-import Canvas from "../Canvas";
-import { Pos_Type } from "../../types/common.type";
-import { color_Type } from "../Canvas/canvas.types";
+import { Pos_Type } from "types/common.type";
+import { color_Type } from "types/plugins/canvas.types";
 
 export enum BarType_Enum {
   V = "v", // 纵向

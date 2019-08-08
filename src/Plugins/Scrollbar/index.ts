@@ -1,11 +1,11 @@
-import Plugin from "../../modules/Plugin";
-import Canvas from "../Canvas";
+import Plugin from "modules/Plugin";
+import Canvas from "plugins/Canvas";
 import Bar from "./bar";
 
 // types
-import { Context_I, Pos_Type } from "../../types/common.type";
-import { isInside } from "../../helpers/is";
-import { ScrollbarProps_I, BarType_Enum, BarProps_I } from "./scrollbar.type";
+import { Context_I, Pos_Type } from "types/common.type";
+import { isInside } from "helpers/is";
+import { ScrollbarProps_I, BarType_Enum, BarProps_I } from "types/plugins/scrollbar.type";
 
 const DEFAULT = {
   vScrollbar: true,

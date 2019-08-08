@@ -8,13 +8,13 @@ import DEFAULT_PROPS from "../config";
 import { INTERNAL_PLUGIN_NAMESPACES } from "../constants";
 
 /* internal Plugins */
-import Canvas from "../Plugins/Canvas";
-import Scrollbar from "../Plugins/Scrollbar";
+import Canvas from "plugins/Canvas";
+import Scrollbar from "plugins/Scrollbar";
 
 /* types */
-import { Config_I } from "../types/common.type";
-import { RegisterOptions_I, PluginCollection_I } from "../types/plugins.type";
-import { Callback_I } from "../types/emitter.type";
+import { Config_I } from "types/common.type";
+import { RegisterOptions_I, PluginCollection_I } from "types/plugins.type";
+import { Callback_I } from "types/emitter.type";
 
 class Core {
   public COLLECTIONS: any;

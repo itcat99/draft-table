@@ -6,7 +6,15 @@
     "module": "commonjs",
     "target": "es5",
     "downlevelIteration": true,
-    "lib": ["dom", "es6", "dom.iterable", "scripthost"]
+    "lib": ["dom", "es6", "dom.iterable", "scripthost"],
+    "baseUrl": "src",
+    "paths": {
+      "modules/*": ["modules/*"],
+      "types/*": ["types/*"],
+      "plugins/*": ["plugins/*"],
+      "helpers/*": ["helpers/*"],
+      "components/*": ["components/*"]
+    }
   },
   "include": ["./src/*", "./src/modules/*", "./src/Plugins/*", "./src/helpers/*", "./src/types/*"]
 }

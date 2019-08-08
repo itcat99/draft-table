@@ -1,7 +1,7 @@
-import { Rect_I } from "../Plugins/Canvas/canvas.types";
-import { Pos_Type } from "../types/common.type";
-import Component from "../modules/Component";
-import { isNum } from "../helpers/is";
+import { Rect_I } from "types/plugins/canvas.types";
+import { Pos_Type } from "types/common.type";
+import Component from "modules/Component";
+import { isNum } from "helpers/is";
 
 class Rect extends Component {
   private _pos: Pos_Type;

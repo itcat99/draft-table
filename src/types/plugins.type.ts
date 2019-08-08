@@ -1,7 +1,7 @@
-import Core from "../modules/Core";
-import Plugin from "../modules/Plugin";
-import Emitter from "../modules/Emitter";
-import Err from "../modules/Err";
+import Core from "modules/Core";
+import Plugin from "modules/Plugin";
+import Emitter from "modules/Emitter";
+import Err from "modules/Err";
 
 import { Config_I } from "./common.type";
 

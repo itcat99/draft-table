@@ -1,5 +1,5 @@
 import { PluginsProps_I, PluginCollection_I } from "./plugins.type";
-import Plugins from "../modules/Plugins";
+import Plugins from "modules/Plugins";
 
 export type Pos_Type = [number, number];
 export type Id_Type = Symbol | string | number;

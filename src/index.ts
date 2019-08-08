@@ -1,10 +1,9 @@
-import Core from "./modules/Core";
+import Core from "modules/Core";
 
-import _Plugin from "./modules/Plugin";
-
-import _Line from "./components/Line";
-import _Rect from "./components/Rect";
-import _Text from "./components/Text";
+import _Plugin from "modules/Plugin";
+import _Line from "components/Line";
+import _Rect from "components/Rect";
+import _Text from "components/Text";
 
 export const Plugin = _Plugin;
 export const Line = _Line;
@@ -15,8 +14,8 @@ export default Core;
 // export default Core;
 
 // import config from "./config";
-// import Canvas from "./modules/Canvas";
-// import Text from "./modules/Text";
+// import Canvas from "modules/Canvas";
+// import Text from "modules/Text";
 
 // class DraftTable {
 //   constructor(props) {

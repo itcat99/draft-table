@@ -1,7 +1,7 @@
 import Emitter from "./Emitter";
 
-import { Context_I } from "../types/common.type";
-import { Callback_I } from "../types/emitter.type";
+import { Context_I } from "types/common.type";
+import { Callback_I } from "types/emitter.type";
 
 class Plugin {
   private _emitter: Emitter;

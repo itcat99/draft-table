@@ -1,5 +1,5 @@
-import { getRatio, getFontFamily } from "./helpers";
-import { Config_I, TextAlign_Enum, TextBaseline_Enum } from "./types/common.type";
+import { getRatio, getFontFamily } from "helpers";
+import { Config_I, TextAlign_Enum, TextBaseline_Enum } from "types/common.type";
 
 const CONFIG: Config_I = {
   target: document.body, // 如果是一个canvas，则使用这个canvas；如果不是，则渲染到这个元素内；

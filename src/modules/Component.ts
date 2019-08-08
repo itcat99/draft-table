@@ -1,4 +1,4 @@
-import { Id_Type, ComponentProps_I } from "../types/common.type";
+import { Id_Type, ComponentProps_I } from "types/common.type";
 
 class Component {
   private _id: Id_Type;

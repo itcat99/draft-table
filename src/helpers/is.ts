@@ -1,4 +1,4 @@
-import { Pos_Type } from "../types/common.type";
+import { Pos_Type } from "types/common.type";
 
 /* 判断是否 */
 

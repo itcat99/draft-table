@@ -4,8 +4,8 @@ import {
   PluginsProps_I,
   PluginsClasses_Type,
   PluginsInstances_Type,
-} from "../types/plugins.type";
-import { Context_I } from "../types/common.type";
+} from "types/plugins.type";
+import { Context_I } from "types/common.type";
 
 import Emitter from "./Emitter";
 import Err from "./Err";

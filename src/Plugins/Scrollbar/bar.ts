@@ -1,10 +1,10 @@
-import { Pos_Type, Context_I } from "../../types/common.type";
-import Rect from "../../components/Rect";
-import Canvas from "../Canvas";
-import Plugin from "../../modules/Plugin";
-import { BarProps_I, BarType_Enum } from "./scrollbar.type";
-import { rangeNum } from "../../helpers";
-import { color_Type } from "../Canvas/canvas.types";
+import { Pos_Type, Context_I } from "types/common.type";
+import Rect from "components/Rect";
+import Canvas from "plugins/Canvas";
+import Plugin from "modules/Plugin";
+import { BarProps_I, BarType_Enum } from "types/plugins/scrollbar.type";
+import { rangeNum } from "helpers";
+import { color_Type } from "types/plugins/canvas.types";
 
 interface BarAttr_I {
   pos: Pos_Type;

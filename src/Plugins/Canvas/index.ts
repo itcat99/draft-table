@@ -1,16 +1,16 @@
-import Plugin from "../../modules/Plugin";
-import { isCanvas } from "../../helpers/is";
+import Plugin from "modules/Plugin";
+import { isCanvas } from "helpers/is";
 
 // components
-import Text from "../../components/Text";
-import Rect from "../../components/Rect";
-import Line from "../../components/Line";
+import Text from "components/Text";
+import Rect from "components/Rect";
+import Line from "components/Line";
 
-import StyleCollection from "./Style";
+import StyleCollection from "plugins/Canvas/Style";
 
 // types
-import { Config_I, Context_I } from "../../types/common.type";
-import { Attrs_I, Context2d_I, Font_I, color_Type } from "./canvas.types";
+import { Config_I, Context_I } from "types/common.type";
+import { Attrs_I, Context2d_I, Font_I, color_Type } from "types/plugins/canvas.types";
 
 interface SetAttrsOptions_I {
   id?: string;

@@ -1,4 +1,4 @@
-import { Pos_Type, ComponentProps_I } from "../../types/common.type";
+import { Pos_Type, ComponentProps_I } from "types/common.type";
 
 export interface Attrs_I {
   [key: string]: any;
