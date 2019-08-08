@@ -10,9 +10,7 @@ import StyleCollection from "./Style";
 
 // types
 import { Config_I, Context_I } from "../../types/common.type";
-import { Attrs_I, Context2d_I, Font_I } from "./canvas.types";
-
-type color_Type = string | CanvasGradient | CanvasPattern;
+import { Attrs_I, Context2d_I, Font_I, color_Type } from "./canvas.types";
 
 interface SetAttrsOptions_I {
   id?: string;
@@ -270,6 +268,18 @@ class Canvas extends Plugin {
     this.el.setAttribute("style", `width: ${width}px; height: ${height}px;`);
     this.ctx.scale(this._ratio, this._ratio);
     this.fire("resize", [{ width, height }]);
+  }
+
+  /**
+   * 获取当前canvas 的大小和屏幕分辨率比值
+   *
+   * @author FreMaNgo
+   * @date 2019-08-07
+   * @returns
+   * @memberof Canvas
+   */
+  getSize() {
+    return { width: this.el.width, height: this.el.height, ratio: this._ratio };
   }
 
   // ============ PRIVATE METHODS ============

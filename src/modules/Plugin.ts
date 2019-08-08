@@ -1,4 +1,4 @@
-import Emitter from "../modules/Emitter";
+import Emitter from "./Emitter";
 
 import { Context_I } from "../types/common.type";
 import { Callback_I } from "../types/emitter.type";
@@ -41,8 +41,8 @@ class Plugin {
    */
   didUpdate(nextStore: any) {}
 
-  removeEvent(key: string, target: string = this.namespace) {
-    this._emitter.del(key, target);
+  removeEvent(key: string, cb: Function, target: string = this.namespace) {
+    this._emitter.del(key, cb, target);
   }
 
   on(key: string, cb: Callback_I, target: string = this.namespace): Plugin {

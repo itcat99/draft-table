@@ -1,5 +1,6 @@
 import Canvas from "../Canvas";
 import { Pos_Type } from "../../types/common.type";
+import { color_Type } from "../Canvas/canvas.types";
 
 export enum BarType_Enum {
   V = "v", // 纵向
@@ -7,25 +8,31 @@ export enum BarType_Enum {
 }
 
 export interface BarProps_I {
-  pos: Pos_Type;
   type: BarType_Enum;
+  origin: Pos_Type;
+  length: number;
   size: number;
   weight: number;
-  opacity: number;
-  canvas: Canvas;
   handleWeight: number;
+  color: color_Type;
+  handleColor: color_Type;
+  activeColor: color_Type;
 }
 
 export interface ScrollbarProps_I {
-  vScrollbar: boolean;
-  hScrollbar: boolean;
-  vPos: number;
-  hPos: number;
-  vSize: number;
-  hSize: number;
-  weight: number;
-  handleWeight: number;
-  delay: number;
-  opacity: number;
-  fixed: boolean;
+  [key: string]: any;
+  vScrollbar: boolean; // 是否启用纵向滚动条
+  hScrollbar: boolean; // 是否启用横向滚动条
+  vOrigin?: Pos_Type; // 纵向滚动条 原点坐标 默认为 [canvas.width - weight, 0]
+  hOrigin?: Pos_Type; // 横向滚动条 原点坐标 默认为 [0, canvas.height - weight]
+  vSize?: number; // 纵向滚动条的高度 默认为 canvas.height
+  hSize?: number; // 横向滚动条的宽度 默认为 canvas.width
+  vLength: number; // 纵向滚动的总长度
+  hLength: number; // 横向滚动的总长度
+  weight?: number; // 纵向滚动条的宽度 或 横向滚动条的高度 默认为16
+  handleWeight?: number; // 纵向滚动条控制把的宽度 或 横向滚动条控制把的高度 默认为12
+  delay?: number; // 触发延迟 *再议
+  color?: color_Type; // 滚动条的颜色 canvas的ctx可接受的color值 默认为 #f1f1f1
+  handleColor?: color_Type; // 控制把的颜色 canvas的ctx可接受的color值 默认为 #111111
+  activeColor?: color_Type; // 滚动条被激活时的颜色 默认为 #fafafa
 }

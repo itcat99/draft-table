@@ -1,16 +1,21 @@
-export enum EventType_Enum {
+export enum EventTypes_Enum {
   ON = "on",
   ONCE = "once",
 }
 
 export interface Event_I {
-  type: EventType_Enum;
-  cb: Callback_I;
+  type: EventTypes_Enum;
+  cb: Function;
+}
+
+export interface Events_I {
+  [key: string]: Event_I[];
+}
+
+export interface Emitters_I {
+  [key: string]: Events_I;
 }
 
 export interface Callback_I {
   (...props: any[]): void;
 }
-
-export type EventsCollection_Type = Map<string, Events_Type>;
-export type Events_Type = Map<string, Array<Event_I>>;

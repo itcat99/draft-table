@@ -5,27 +5,28 @@ import Bar from "./bar";
 // types
 import { Context_I, Pos_Type } from "../../types/common.type";
 import { isInside } from "../../helpers/is";
-import { ScrollbarProps_I, BarType_Enum } from "./scrollbar.type";
+import { ScrollbarProps_I, BarType_Enum, BarProps_I } from "./scrollbar.type";
 
-const DEFAULT: ScrollbarProps_I = {
+const DEFAULT = {
   vScrollbar: true,
   hScrollbar: true,
   vPos: 0,
   hPos: 0,
-  vSize: 600,
-  hSize: 800,
-  weight: 12,
-  handleWeight: 10,
-  delay: 300,
-  opacity: 0.2,
-  fixed: false,
+  weight: 16,
+  handleWeight: 12,
+  color: "#f1f1f1",
+  handleColor: "#111111",
+  activeColor: "#d1d1d1",
+  vLength: 1000,
+  hLength: 1200,
 };
 
 class Scrollbar extends Plugin {
   private _canvas: Canvas;
-  private _color: string;
   private _vScrollbar: Bar;
   private _hScrollbar: Bar;
+  private _initVScrollbar: boolean;
+  private _initHScrollbar: boolean;
 
   public options: ScrollbarProps_I;
   public hasVScrollbar: boolean;
@@ -33,86 +34,117 @@ class Scrollbar extends Plugin {
   public vSize: number;
   public hSize: number;
 
-  constructor(context: Context_I, options: any) {
+  constructor(context: Context_I, options: ScrollbarProps_I) {
     super(context, options);
     const { plugins } = this.context;
     this.options = Object.assign({}, DEFAULT, options);
-
-    const { vScrollbar, hScrollbar, vSize, hSize, weight } = this.options;
-    this.hasVScrollbar = vScrollbar;
-    this.hasHScrollbar = hScrollbar;
-
-    this.vSize = vSize;
-    this.hSize = hSize;
-
-    if (vScrollbar && hScrollbar) {
-      this.vSize -= weight;
-      this.hSize -= weight;
-    }
-
     this._canvas = <Canvas>plugins.getInstance("canvas");
 
-    this._initialized();
+    this._check();
     this._listener();
   }
   // ============= APIs ============= //
   // ============= Private Methods ============= //
+  private _check() {
+    const { vLength, vScrollbar, hLength, hScrollbar } = this.options;
+    const { width, height, ratio } = this._canvas.getSize();
+
+    this._initVScrollbar = vScrollbar && vLength > height / ratio;
+    this._initHScrollbar = hScrollbar && hLength > width / ratio;
+
+    if (this._initVScrollbar || this._initHScrollbar) this._initialized();
+  }
+
   private _initialized() {
-    this._canvas.color(this._color, {
-      id: "_SCROLLBAR_DEFAULT_",
-    });
+    this.options = this._normalizedOpts();
 
-    const { vScrollbar, hScrollbar } = this.options;
-    vScrollbar && this._initVScrollbar();
-    hScrollbar && this._initHScrollbar();
+    if (this._initHScrollbar) {
+      this._hScrollbar = new Bar(this.context, this._generateScrollbarProps(BarType_Enum.H));
+    }
+
+    if (this._initVScrollbar) {
+      this._vScrollbar = new Bar(this.context, this._generateScrollbarProps(BarType_Enum.V));
+    }
   }
 
   /**
-   * 绘制纵向滚动条
+   * 格式化options
    *
    * @author FreMaNgo
-   * @date 2019-08-05
+   * @date 2019-08-07
    * @private
+   * @returns
    * @memberof Scrollbar
    */
-  private _initVScrollbar() {
-    const { vPos, weight, handleWeight, opacity } = this.options;
-    const x = parseInt(this._canvas.el.style.width, 10) - weight;
-    const y = 0;
+  private _normalizedOpts() {
+    const { weight, vOrigin, hOrigin, vSize, hSize } = this.options;
+    const canvasSize = this._canvas.getSize();
+    const canvasWidth = canvasSize.width / canvasSize.ratio;
+    const canvasHeight = canvasSize.height / canvasSize.ratio;
+    const normalizedOPts: { [key: string]: any } = {};
 
-    this._vScrollbar = new Bar(this.context, {
-      pos: [x, y],
-      size: this.vSize,
-      weight,
-      canvas: this._canvas,
-      type: BarType_Enum.V,
-      opacity,
-      handleWeight,
-    });
+    if (!vOrigin) normalizedOPts.vOrigin = [canvasWidth - weight, 0];
+    if (!hOrigin) normalizedOPts.hOrigin = [0, canvasHeight - weight];
+    if (!hSize) normalizedOPts.vSize = canvasHeight;
+    if (!vSize) normalizedOPts.hSize = canvasWidth;
+
+    const result = Object.assign({}, this.options, normalizedOPts);
+    if (this._initHScrollbar && this._initVScrollbar) {
+      const { vSize, hSize } = result;
+      result.vSize = vSize - weight;
+      result.hSize = hSize - weight;
+    }
+
+    return result;
   }
 
   /**
-   * 绘制横向滚动条
+   * 获取不同type创建bar时所需的配置属性
    *
    * @author FreMaNgo
-   * @date 2019-08-05
+   * @date 2019-08-07
    * @private
+   * @param {string} type
+   * @returns
    * @memberof Scrollbar
    */
-  private _initHScrollbar() {
-    const { vPos, weight, handleWeight, opacity } = this.options;
-    const x = 0;
-    const y = parseInt(this._canvas.el.style.height, 10) - weight;
+  private _generateScrollbarProps(type: BarType_Enum): BarProps_I {
+    const keys = ["origin", "length", "size"];
+    const result: { [key: string]: any } = {};
 
-    this._hScrollbar = new Bar(this.context, {
-      pos: [x, y],
-      size: this.hSize,
-      weight,
-      canvas: this._canvas,
-      type: BarType_Enum.H,
-      opacity,
-      handleWeight,
+    keys.forEach(key => {
+      const targetKey = this._getExclusiveAttr(type, key);
+      result[key] = this.options[targetKey];
     });
+
+    const { weight, color, handleColor, handleWeight, activeColor } = this.options;
+
+    return {
+      type,
+      origin: result.origin,
+      length: result.length,
+      size: result.size,
+      weight,
+      color,
+      handleColor,
+      handleWeight,
+      activeColor,
+    };
+  }
+
+  /**
+   * 获取不同类型的scollbar专有属性
+   *
+   * @author FreMaNgo
+   * @date 2019-08-07
+   * @private
+   * @param {BarType_Enum} type scrollbar类型
+   * @param {string} name 属性名
+   * @returns
+   * @memberof Scrollbar
+   */
+  private _getExclusiveAttr(type: BarType_Enum, name: string) {
+    return `${type}${name.slice(0, 1).toUpperCase()}${name.slice(1)}`;
   }
 
   protected _listener() {

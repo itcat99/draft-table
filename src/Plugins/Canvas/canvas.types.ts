@@ -33,3 +33,5 @@ export interface Font_I {
   variant?: string;
   stretch?: string;
 }
+
+export type color_Type = string | CanvasGradient | CanvasPattern;

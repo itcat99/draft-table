@@ -1,3 +1,4 @@
+// import Emitter from "./Emitter";
 import Emitter from "./Emitter";
 import Plugins from "./Plugins";
 import Plugin from "./Plugin";
@@ -12,7 +13,7 @@ import Scrollbar from "../Plugins/Scrollbar";
 
 /* types */
 import { Config_I } from "../types/common.type";
-import { RegisterOptions_I, PluginsClasses_Type, PluginCollection_I } from "../types/plugins.type";
+import { RegisterOptions_I, PluginCollection_I } from "../types/plugins.type";
 import { Callback_I } from "../types/emitter.type";
 
 class Core {
@@ -135,8 +136,8 @@ class Core {
     return instance;
   }
 
-  removeEvent(key: string, target?: string) {
-    this.EMITTER.del(key, target);
+  removeEvent(key: string, cb?: Function, target?: string) {
+    this.EMITTER.del(key, cb, target);
     return this;
   }
 
@@ -197,9 +198,16 @@ class Core {
     });
     el.addEventListener("keypress", e => {
       this.fire("keypress", [e]);
-      // e.stopPropagation();
       e.preventDefault();
     });
+
+    this.on(
+      "changeViewOffset",
+      result => {
+        console.log("result: ", result);
+      },
+      "bar",
+    );
   }
 
   private _registerPlugins() {
