@@ -6,18 +6,22 @@ const CONFIG: Config_I = {
   width: 800,
   height: 600,
   ratio: getRatio(), // 设备屏幕像素比
-  strokeStyle: "#000000",
-  fillStyle: "#000000",
-  fontStyle: "normal",
-  fontVariant: "normal",
-  fontStretch: "normal",
-  fontWeight: 400,
-  fontSize: 16,
-  fontFamily: getFontFamily(),
-  lineHeight: "16px", // 字体的行高
-  lineWidth: 1, // 线的宽度
-  textAlign: TextAlign_Enum.LEFT,
-  textBaseline: TextBaseline_Enum.TOP,
+  style: {
+    strokeStyle: "#000000",
+    fillStyle: "#000000",
+    lineWidth: 1, // 线的宽度
+    textAlign: TextAlign_Enum.LEFT,
+    textBaseline: TextBaseline_Enum.TOP,
+  },
+  font: {
+    style: "normal",
+    variant: "normal",
+    stretch: "normal",
+    weight: 400,
+    size: 16,
+    family: getFontFamily(),
+    lineHeight: "16px", // 字体的行高
+  },
 };
 
 export default CONFIG;

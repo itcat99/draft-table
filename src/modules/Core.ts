@@ -12,9 +12,21 @@ import Canvas from "plugins/Canvas";
 import Scrollbar from "plugins/Scrollbar";
 
 /* types */
-import { Config_I } from "types/common.type";
+import {
+  Config_I,
+  LineStyle_I,
+  FinalCollection_I,
+  RectStyle_I,
+  TextStyle_I,
+  DrawProps_I,
+} from "types/common.type";
 import { RegisterOptions_I, PluginCollection_I } from "types/plugins.type";
 import { Callback_I } from "types/emitter.type";
+import { deepMerge, generatorFont } from "helpers";
+import { Line_I, Rect_I, Text_I } from "types/plugins/canvas.types";
+import Line from "components/Line";
+import Rect from "components/Rect";
+import Text from "components/Text";
 
 class Core {
   public COLLECTIONS: any;
@@ -67,10 +79,7 @@ class Core {
       plugins = Object.assign({}, plugins, props.plugins);
     }
     // 全局配置信息
-    this.config = Object.assign({}, DEFAULT_PROPS, props, {
-      plugins,
-    });
-
+    this.config = deepMerge(DEFAULT_PROPS, Object.assign({}, props, { plugins }));
     // 初始化各个模块
     this.EMITTER = new Emitter();
     this.ERR = new Err();
@@ -151,11 +160,168 @@ class Core {
     return this;
   }
 
-  fire(key: string, props: any[], namespace?: string) {
+  fire(key: string, props?: any[], namespace?: string) {
     this.EMITTER.fire(key, props, namespace);
     return this;
   }
+  // 锁定
+  lockedRow() {}
+  lockedCol() {}
+  // 插入
+  insertRow() {}
+  insertCol() {}
+  // 删除
+  delRow() {}
+  delCol() {}
+  // 隐藏
+  hiddenRow() {}
+  hiddenCol() {}
+  // 替换
+  replaceCell() {}
+  replaceRow() {}
+  replaceCol() {}
+  // 合并
+  mergeCell() {}
+  mergeCol() {}
+  mergeRow() {}
+  // 解除合并
+  brokenMergeCell() {}
+  brokenMergeRow() {}
+  brokenMergeCol() {}
 
+  // 裁剪显示区域绘制数据
+  slice() {}
+
+  /**
+   * 最终绘制的函数
+   * 到这个位置，只需要知道绘制哪些线，哪些矩形，哪些文字
+   * 不关心这些线、矩形、文字具体是什么
+   * 传入的每个参数都为一个二维数组，根据不同的style划分不同集合
+   * 绘制顺序 line -> rect -> text
+   *
+   * @author FreMaNgo
+   * @date 2019-08-09
+   * @memberof Core
+   */
+  draw(props: DrawProps_I) {
+    const handleMethods = this.PLUGINS.getBeforeDrawMethods();
+    props = handleMethods.reduce((preVal, currentVal) => {
+      return currentVal(preVal);
+    }, props);
+
+    const { line, rect, text } = props;
+    // draw lines
+    line &&
+      line.forEach(lines => {
+        const { data, style } = lines;
+        this._drawLines(data, style);
+      });
+    // draw rects
+    rect &&
+      rect.forEach(rects => {
+        const { data, style } = rects;
+        this._drawRects(data, style);
+      });
+    // draw texts
+    text &&
+      text.forEach(texts => {
+        const { data, style } = texts;
+        this._drawTexts(data, style);
+      });
+
+    this.fire("didDraw");
+  }
+
+  /**
+   * 绘制线条
+   *
+   * @author FreMaNgo
+   * @date 2019-08-09
+   * @private
+   * @param {Line[]} lines
+   * @param {LineStyle_I} [style]
+   * @memberof Core
+   */
+  private _drawLines(lines: Line[], style?: LineStyle_I) {
+    if (!style) {
+      this.canvas.drawLine(lines);
+    } else {
+      const { color, weight } = style;
+      this.canvas.setAttrs(
+        { fillStroke: color, lineWeight: weight },
+        {
+          once: true,
+          cb: () => {
+            this.canvas.drawLine(lines);
+          },
+        },
+      );
+    }
+  }
+
+  /**
+   * 绘制矩形
+   *
+   * @author FreMaNgo
+   * @date 2019-08-09
+   * @private
+   * @param {Rect[]} rects
+   * @param {RectStyle_I} [style]
+   * @memberof Core
+   */
+  private _drawRects(rects: Rect[], style?: RectStyle_I) {
+    if (!style) {
+      this.canvas.drawRect(rects);
+    } else {
+      this.canvas.setAttrs(
+        { fillStyle: style.color },
+        {
+          once: true,
+          cb: () => {
+            this.canvas.drawRect(rects);
+          },
+        },
+      );
+    }
+  }
+
+  /**
+   * 绘制文字
+   *
+   * @author FreMaNgo
+   * @date 2019-08-09
+   * @private
+   * @param {Text[]} texts
+   * @param {TextStyle_I} [style]
+   * @memberof Core
+   */
+  private _drawTexts(texts: Text[], style?: TextStyle_I) {
+    if (!style) {
+      this.canvas.drawText(texts);
+    } else {
+      const { color, ...args } = style;
+      const fontStyle = generatorFont(args, this.canvas.fontStyle);
+
+      this.canvas.setAttrs(
+        { fillStyle: color, font: fontStyle },
+        {
+          once: true,
+          cb: () => {
+            this.canvas.drawText(texts);
+          },
+        },
+      );
+    }
+  }
+
+  /**
+   * 绑定内置插件实例到this上
+   *
+   * @author FreMaNgo
+   * @date 2019-08-09
+   * @private
+   * @memberof Core
+   */
   private _bindInsidePlugin() {
     // canvas 插件
     this.canvas = <Canvas>this.PLUGINS.getInstance("canvas");

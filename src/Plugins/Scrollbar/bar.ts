@@ -4,7 +4,7 @@ import Canvas from "plugins/Canvas";
 import Plugin from "modules/Plugin";
 import { BarProps_I, BarType_Enum } from "types/plugins/scrollbar.type";
 import { rangeNum } from "helpers";
-import { color_Type } from "types/plugins/canvas.types";
+import { Color_Type } from "types/plugins/canvas.types";
 
 interface BarAttr_I {
   pos: Pos_Type;
@@ -20,9 +20,9 @@ class Bar extends Plugin {
   bar: Rect;
   handle: Rect;
 
-  private _color: color_Type;
-  private _handleColor: color_Type;
-  private _activeColor: color_Type;
+  private _color: Color_Type;
+  private _handleColor: Color_Type;
+  private _activeColor: Color_Type;
 
   private _barAttr: BarAttr_I;
   private _handleAttr: HandleAttr_I;
@@ -44,7 +44,7 @@ class Bar extends Plugin {
     super(context, options);
 
     const { color } = this.options;
-    this.canvas = <Canvas>this.context.plugins.getInstance("canvas");
+    this.canvas = <Canvas>this.getPlugin("canvas");
 
     this._init();
 
@@ -235,6 +235,17 @@ class Bar extends Plugin {
         this.render();
       },
       "scrollbar",
+    );
+
+    this.on(
+      "blur",
+      () => {
+        this.removeEvent("click", this._onClick);
+        this.removeEvent("mousedown", this._onMousedown);
+        this.removeEvent("mouseup", this._onMouseup);
+        this.removeEvent("mousemove", this._onMousemove);
+      },
+      "_GLOBAL_",
     );
   }
 

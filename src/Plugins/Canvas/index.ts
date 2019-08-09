@@ -1,5 +1,5 @@
 import Plugin from "modules/Plugin";
-import { isCanvas } from "helpers/is";
+import { isCanvas, isNum } from "helpers/is";
 
 // components
 import Text from "components/Text";
@@ -9,19 +9,16 @@ import Line from "components/Line";
 import StyleCollection from "plugins/Canvas/Style";
 
 // types
-import { Config_I, Context_I } from "types/common.type";
-import { Attrs_I, Context2d_I, Font_I, color_Type } from "types/plugins/canvas.types";
-
-interface SetAttrsOptions_I {
-  id?: string;
-  cb?: Function;
-  once?: boolean;
-}
+import { Config_I, Context_I, Font_I } from "types/common.type";
+import { Attrs_I, Context2d_I, Color_Type, SetAttrsOptions_I } from "types/plugins/canvas.types";
+import { generatorFont } from "helpers";
 
 class Canvas extends Plugin {
   public config: Config_I;
   public el: HTMLCanvasElement;
   public ctx: Context2d_I;
+  public fontStyle: string;
+
   private _styleCollection: StyleCollection;
   private _currentFontStyle: Font_I;
   private _ratio: number;
@@ -33,7 +30,6 @@ class Canvas extends Plugin {
     const { plugins, ...args } = originConfig;
 
     this.config = args;
-
     this._styleCollection = new StyleCollection();
 
     this._initialized();
@@ -182,12 +178,12 @@ class Canvas extends Plugin {
    *
    * @author FreMaNgo
    * @date 2019-08-06
-   * @param {color_Type} color ctx上下文可接受的颜色值或对象
+   * @param {Color_Type} color ctx上下文可接受的颜色值或对象
    * @param {SetAttrsOptions_I} opts
    * @returns {Canvas}
    * @memberof Canvas
    */
-  color(color: color_Type, opts?: SetAttrsOptions_I): Canvas {
+  color(color: Color_Type, opts?: SetAttrsOptions_I): Canvas {
     return this._color(color, opts, false);
   }
 
@@ -196,12 +192,12 @@ class Canvas extends Plugin {
    *
    * @author FreMaNgo
    * @date 2019-08-06
-   * @param {color_Type} color ctx上下文可接受的颜色值或对象
+   * @param {Color_Type} color ctx上下文可接受的颜色值或对象
    * @param {SetAttrsOptions_I} opts
    * @returns {Canvas}
    * @memberof Canvas
    */
-  lineColor(color: color_Type, opts?: SetAttrsOptions_I): Canvas {
+  lineColor(color: Color_Type, opts?: SetAttrsOptions_I): Canvas {
     return this._color(color, opts, true);
   }
 
@@ -232,9 +228,7 @@ class Canvas extends Plugin {
    */
   font(config: Font_I, opts?: SetAttrsOptions_I): Canvas {
     this._currentFontStyle = Object.assign({}, this._currentFontStyle, config);
-    const font = { font: this._normailzeFont(this._currentFontStyle) };
-
-    return this.setAttrs(font, opts);
+    return this.setAttrs({ font: generatorFont(this._currentFontStyle) }, opts);
   }
 
   /**
@@ -290,7 +284,7 @@ class Canvas extends Plugin {
    * 2. 格式化ctx的各项属性
    */
   private _initialized() {
-    const { width, height, target, ratio, ...styles } = this.config;
+    const { width, height, target, ratio, style, font: fontStyle } = this.config;
 
     this._ratio = ratio;
 
@@ -316,40 +310,11 @@ class Canvas extends Plugin {
     this.setSize(width, height);
 
     // set init attrs
-    const {
-      fontSize,
-      lineHeight,
-      fontFamily,
-      fontWeight,
-      fontStyle,
-      fontVariant,
-      fontStretch,
-      ...args
-    } = styles;
+    this._currentFontStyle = fontStyle;
 
-    this._currentFontStyle = {
-      size: fontSize,
-      family: fontFamily,
-      lineHeight,
-      weight: fontWeight,
-      style: fontStyle,
-      variant: fontVariant,
-      stretch: fontStretch,
-    };
-
-    const font = this._normailzeFont(this._currentFontStyle);
-
-    this.setAttrs({ font, ...args }, { id: "_INIT_" });
+    const font = generatorFont(this._currentFontStyle);
+    this.setAttrs({ font, ...style }, { id: "_INIT_" });
     this.fire("initialized", []);
-  }
-
-  private _normailzeFont(opts: Font_I) {
-    const { variant, weight, stretch, family, style, lineHeight } = opts;
-    let { size } = opts;
-
-    if (typeof size === "number") size = `${size}px`;
-
-    return `${style} ${variant} ${weight} ${stretch} ${size}/${lineHeight} ${family}`;
   }
 
   /**
@@ -363,7 +328,7 @@ class Canvas extends Plugin {
    * @returns {Canvas} 返回当前实例
    * @memberof Canvas
    */
-  private _color(color: color_Type, opts?: SetAttrsOptions_I, stroke?: boolean): Canvas {
+  private _color(color: Color_Type, opts?: SetAttrsOptions_I, stroke?: boolean): Canvas {
     const style = stroke ? { strokeStyle: color } : { fillStyle: color };
     return this.setAttrs(style, opts);
   }
@@ -380,6 +345,8 @@ class Canvas extends Plugin {
   private _setAttrs(attrs: Attrs_I, ctx: Context2d_I) {
     for (let key of Object.keys(attrs)) {
       const val = attrs[key];
+      if (!isNum(val) && !val) continue;
+      if (key === "font") this.fontStyle = val;
       ctx[key] = val;
     }
 

@@ -14,25 +14,30 @@ function createLines(count) {
   return arr;
 }
 
-const table = new DraftTable();
-const line = new Line({ from: [10, 10], to: [100, 10] });
-const line2 = new Line({ from: [10, 20], to: [100, 20] });
+const table = new DraftTable({
+  font: {
+    size: 14,
+  },
+});
 
-const text = new Text({ pos: [0, 0], value: "HEllo" });
-const text2 = new Text({ pos: [100, 100], value: "World" });
-const rect = new Rect({ pos: [200, 200], width: 100, height: 150 });
-const rect2 = new Rect({ pos: [100, 100], width: 50, height: 50 });
-const canvas = table.canvas;
+const rect = new Rect({ pos: [10, 10], width: 100, height: 100 });
+const text = new Text({ pos: [10, 10], value: "Hello" });
 
-canvas
-  .lineColor("#ff0000", { id: "line1" })
-  .drawText([text])
-  .drawLine([line])
-  .color("#f011ff", { id: "color1" })
-  .font({ size: 25, lineHeight: "25px" })
-  .drawLine([line2])
-  .drawText([text2])
-  .color("rgba(0,0,0,.5)")
-  .drawRect([rect])
-  .popStyle("color1")
-  .drawRect([rect2]);
+table.draw({
+  rect: [
+    {
+      data: [rect],
+      style: {
+        color: "rgba(255,0,0,.1)",
+      },
+    },
+  ],
+  text: [
+    {
+      data: [text],
+      style: {
+        size: 25,
+      },
+    },
+  ],
+});

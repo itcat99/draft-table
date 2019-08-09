@@ -3,7 +3,7 @@ import Canvas from "plugins/Canvas";
 import Bar from "./bar";
 
 // types
-import { Context_I, Pos_Type } from "types/common.type";
+import { Context_I, Pos_Type, DrawProps_I } from "types/common.type";
 import { isInside } from "helpers/is";
 import { ScrollbarProps_I, BarType_Enum, BarProps_I } from "types/plugins/scrollbar.type";
 
@@ -40,8 +40,14 @@ class Scrollbar extends Plugin {
     this.options = Object.assign({}, DEFAULT, options);
     this._canvas = <Canvas>plugins.getInstance("canvas");
 
-    this._check();
-    this._listener();
+    this.on(
+      "didDraw",
+      () => {
+        this._check();
+        this._listener();
+      },
+      "_GLOBAL_",
+    );
   }
   // ============= APIs ============= //
   // ============= Private Methods ============= //

@@ -21,6 +21,7 @@ class Plugins {
   private _err: Err;
   private _emitter: Emitter;
   private _context: Context_I;
+  private _beforeDrawMethods: Function[];
 
   /**
    *Creates an instance of Plugins.
@@ -37,6 +38,7 @@ class Plugins {
 
     this._instances = new Map();
     this._plugins = new Map();
+    this._beforeDrawMethods = [];
   }
 
   /**
@@ -70,6 +72,9 @@ class Plugins {
    * @memberof Plugins
    */
   del(name: string) {
+    const instance = this._instances.get(name);
+    this._beforeDrawMethods = this._beforeDrawMethods.filter(item => item !== instance.beforeDraw);
+
     this._plugins.delete(name);
     this._instances.delete(name);
     this._emitter.fire("delete", [name]);
@@ -128,6 +133,18 @@ class Plugins {
   }
 
   /**
+   * 获取所有已注册插件的beforeDraw函数
+   *
+   * @author FreMaNgo
+   * @date 2019-08-09
+   * @returns 返回beforeDraw函数数组
+   * @memberof Plugins
+   */
+  getBeforeDrawMethods() {
+    return this._beforeDrawMethods;
+  }
+
+  /**
    *  执行指定插件
    *
    * @author FreMaNgo
@@ -145,7 +162,7 @@ class Plugins {
 
       const instance = new _class(this._context, Object.assign({}, options, props));
       this._instances.set(name, instance);
-
+      this._beforeDrawMethods.push(instance.beforeDraw);
       this._emitter.fire("run", [name]);
       return instance;
     }

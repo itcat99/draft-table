@@ -1,6 +1,6 @@
 import Emitter from "./Emitter";
 
-import { Context_I } from "types/common.type";
+import { Context_I, DrawProps_I } from "types/common.type";
 import { Callback_I } from "types/emitter.type";
 
 class Plugin {
@@ -40,6 +40,25 @@ class Plugin {
    * @memberof Plugin
    */
   didUpdate(nextStore: any) {}
+
+  /**
+   * 最终绘制之前，最后一次可以修改绘制结果的函数
+   *
+   * 接受旧参数，返回新参数
+   *
+   * @author FreMaNgo
+   * @date 2019-08-09
+   * @param {DrawProps_I} props 旧的参数
+   * @returns 返回新的绘制参数
+   * @memberof Plugin
+   */
+  beforeDraw(props: DrawProps_I): DrawProps_I {
+    return props;
+  }
+
+  getPlugin<T>(name: string): T | Plugin {
+    return <T>this.context.plugins.getInstance(name);
+  }
 
   removeEvent(key: string, cb: Function, target: string = this.namespace) {
     this._emitter.del(key, cb, target);

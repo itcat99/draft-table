@@ -24,14 +24,10 @@ export interface Text_I extends ComponentProps_I {
   value: string;
 }
 
-export interface Font_I {
-  size?: number | string;
-  family?: string;
-  weight?: number | string;
-  style?: string;
-  lineHeight?: number | string;
-  variant?: string;
-  stretch?: string;
-}
+export type Color_Type = string | CanvasGradient | CanvasPattern;
 
-export type color_Type = string | CanvasGradient | CanvasPattern;
+export interface SetAttrsOptions_I {
+  id?: string;
+  cb?: Function;
+  once?: boolean;
+}
