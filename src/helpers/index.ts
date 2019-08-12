@@ -1,5 +1,5 @@
 import { isObj } from "./is";
-import { Font_I } from "types/common.type";
+import { Font_I } from "types/style.type";
 
 /**
  * 获取屏幕像素比

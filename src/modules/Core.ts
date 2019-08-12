@@ -12,18 +12,13 @@ import Canvas from "plugins/Canvas";
 import Scrollbar from "plugins/Scrollbar";
 
 /* types */
-import {
-  Config_I,
-  LineStyle_I,
-  FinalCollection_I,
-  RectStyle_I,
-  TextStyle_I,
-  DrawProps_I,
-} from "types/common.type";
+import { Config_I, Id_Type } from "types/common.type";
+import { LineStyle_I, RectStyle_I, TextStyle_I } from "types/style.type";
 import { RegisterOptions_I, PluginCollection_I } from "types/plugins.type";
+import { Data_I, RenderingData_I } from "types/collections.type";
 import { Callback_I } from "types/emitter.type";
 import { deepMerge, generatorFont } from "helpers";
-import { Line_I, Rect_I, Text_I } from "types/plugins/canvas.types";
+
 import Line from "components/Line";
 import Rect from "components/Rect";
 import Text from "components/Text";
@@ -36,12 +31,19 @@ class Core {
   public ERR: Err;
 
   public config: Config_I;
-  public pluginInstances: {
-    [namespace: string]: Plugin;
-  };
 
+  // === 内置插件实例 === //
   public canvas: Canvas;
   public scrollbar: Scrollbar;
+
+  // === Informations === //
+  width: number; // canvas宽度
+  height: number; // canvas高度
+  viewWidth: number; // 可绘制区域宽度
+  viewHeight: number; // 可绘制区域高度
+  data: Data_I; // 原始集合
+  viewData: Data_I; // 视图集合
+  renderingData: RenderingData_I;
 
   /**
    * 初始化：emitter,plugins,collection,store,err
@@ -52,8 +54,6 @@ class Core {
    * @memberof Core
    */
   constructor(props: Config_I) {
-    this.pluginInstances = {};
-
     // 内置模块
     const internalPlugins = {
       canvas: {
@@ -128,6 +128,10 @@ class Core {
     return this;
   }
 
+  getPluginInstance<T>(name: string) {
+    return <T>this.PLUGINS.getInstance(name);
+  }
+
   /**
    *
    *
@@ -139,10 +143,7 @@ class Core {
    * @memberof Core
    */
   run(name: string, options: any): Plugin {
-    const instance = this.PLUGINS.run(name, options);
-    this.pluginInstances[name] = instance;
-
-    return instance;
+    return this.PLUGINS.run(name, options);
   }
 
   removeEvent(key: string, cb?: Function, target?: string) {
@@ -165,21 +166,21 @@ class Core {
     return this;
   }
   // 锁定
-  lockedRow() {}
-  lockedCol() {}
+  lockedRow(key: Id_Type) {}
+  lockedCol(key: Id_Type) {}
   // 插入
-  insertRow() {}
-  insertCol() {}
+  insertRow(key: Id_Type, data: any) {}
+  insertCol(key: Id_Type, data: any) {}
   // 删除
-  delRow() {}
-  delCol() {}
+  delRow(key: Id_Type) {}
+  delCol(key: Id_Type) {}
   // 隐藏
-  hiddenRow() {}
-  hiddenCol() {}
+  hiddenRow(key: Id_Type) {}
+  hiddenCol(key: Id_Type) {}
   // 替换
-  replaceCell() {}
-  replaceRow() {}
-  replaceCol() {}
+  replaceCell(key: Id_Type, data: any) {}
+  replaceRow(key: Id_Type, data: any) {}
+  replaceCol(key: Id_Type, data: any) {}
   // 合并
   mergeCell() {}
   mergeCol() {}
@@ -190,7 +191,7 @@ class Core {
   brokenMergeCol() {}
 
   // 裁剪显示区域绘制数据
-  slice() {}
+  slice(rows: any, cols: any, width: number, height: number) {}
 
   /**
    * 最终绘制的函数
@@ -203,7 +204,7 @@ class Core {
    * @date 2019-08-09
    * @memberof Core
    */
-  draw(props: DrawProps_I) {
+  draw(props: RenderingData_I) {
     const handleMethods = this.PLUGINS.getBeforeDrawMethods();
     props = handleMethods.reduce((preVal, currentVal) => {
       return currentVal(preVal);
@@ -376,6 +377,41 @@ class Core {
     );
   }
 
+  /**
+   * 过滤原始集合到视图集合
+   *
+   * @author FreMaNgo
+   * @date 2019-08-12
+   * @private
+   * @param {Data_I} data 原始集合
+   * @param {number} width 渲染视图宽
+   * @param {number} height 渲染视图高
+   * @param {number} extraRowCount 额外行数量
+   * @param {number} extraColCount 额外列数量
+   * @returns {Data_I} 返回视图集合
+   * @memberof Core
+   */
+  private _filterViewData(
+    data: Data_I,
+    width: number,
+    height: number,
+    extraRowCount: number,
+    extraColCount: number,
+  ): Data_I {
+    return data;
+  }
+
+  /**
+   * 过滤视图集合到渲染集合
+   *
+   * @author FreMaNgo
+   * @date 2019-08-12
+   * @private
+   * @param {Data_I} data 视图集合
+   * @memberof Core
+   */
+  private _filterRenderingData(data: Data_I) {}
+
   private _registerPlugins() {
     const { plugins } = this.config;
 
@@ -391,7 +427,7 @@ class Core {
     for (let key of plugins.keys()) {
       const plugin = plugins.get(key);
       const { auto, autoProps } = plugin.options;
-      if (auto) this.pluginInstances[key] = this.PLUGINS.run(key, autoProps);
+      if (auto) this.PLUGINS.run(key, autoProps);
     }
   }
 }

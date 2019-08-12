@@ -1,6 +1,7 @@
 import Emitter from "./Emitter";
 
-import { Context_I, DrawProps_I } from "types/common.type";
+import { Context_I } from "types/common.type";
+import { RenderingData_I } from "types/collections.type";
 import { Callback_I } from "types/emitter.type";
 
 class Plugin {
@@ -52,7 +53,7 @@ class Plugin {
    * @returns 返回新的绘制参数
    * @memberof Plugin
    */
-  beforeDraw(props: DrawProps_I): DrawProps_I {
+  beforeDraw(props: RenderingData_I): RenderingData_I {
     return props;
   }
 

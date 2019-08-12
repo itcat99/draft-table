@@ -9,7 +9,8 @@ import Line from "components/Line";
 import StyleCollection from "plugins/Canvas/Style";
 
 // types
-import { Config_I, Context_I, Font_I } from "types/common.type";
+import { Config_I, Context_I } from "types/common.type";
+import { Font_I } from "types/style.type";
 import { Attrs_I, Context2d_I, Color_Type, SetAttrsOptions_I } from "types/plugins/canvas.types";
 import { generatorFont } from "helpers";
 
