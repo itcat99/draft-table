@@ -1,20 +1,18 @@
-import DraftTable, { Line, Text, Rect, Plugin } from "../src/index";
-import { Random } from "mockjs";
+import DraftTable, { Line, Text, Rect } from "../src/index";
 
-function createLines(count) {
-  const arr = [];
+const rows = {
+  items: [{ size: 20, data: [{ id: "init", type: "text", value: "hello" }] }],
+};
+const cols = {
+  items: [{ size: 100, data: ["init"] }],
+};
 
-  for (; count > 0; count--) {
-    const from = [Random.natural(0, 800), Random.natural(0, 600)];
-    const to = [Random.natural(0, 800), Random.natural(0, 600)];
-
-    arr.push(new Line({ from, to }));
-  }
-
-  return arr;
-}
+const data = {
+  items: [[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]],
+};
 
 const table = new DraftTable({
+  data,
   font: {
     size: 14,
   },

@@ -5,7 +5,7 @@ import Plugin from "./Plugin";
 import Err from "./Err";
 
 import DEFAULT_PROPS from "../config";
-import { INTERNAL_PLUGIN_NAMESPACES } from "../constants";
+import { INTERNAL_PLUGIN_NAMESPACES, ROW_DATA, DATA } from "../constants";
 
 /* internal Plugins */
 import Canvas from "plugins/Canvas";
@@ -15,13 +15,14 @@ import Scrollbar from "plugins/Scrollbar";
 import { Config_I, Id_Type } from "types/common.type";
 import { LineStyle_I, RectStyle_I, TextStyle_I } from "types/style.type";
 import { RegisterOptions_I, PluginCollection_I } from "types/plugins.type";
-import { Data_I, RenderingData_I } from "types/collections.type";
+import { Data_I, RenderingData_I, RowData_I, CellData_I } from "types/collections.type";
 import { Callback_I } from "types/emitter.type";
 import { deepMerge, generatorFont } from "helpers";
 
 import Line from "components/Line";
 import Rect from "components/Rect";
 import Text from "components/Text";
+import { isUndefined, isNull, isArray } from "util";
 
 class Core {
   public COLLECTIONS: any;
@@ -54,8 +55,12 @@ class Core {
    * @memberof Core
    */
   constructor(props: Config_I) {
-    // 内置模块
-    const internalPlugins = {
+    // 全局配置信息
+    this.config = deepMerge(DEFAULT_PROPS, props);
+    this._checkPlugin(this.config.plugins);
+
+    const { scrollbar } = this.config;
+    let internalPlugins = {
       canvas: {
         class: Canvas,
         options: {
@@ -63,23 +68,22 @@ class Core {
           auto: true,
         },
       },
-      scrollbar: {
-        class: Scrollbar,
-        options: {
-          namespace: "scrollbar",
-          auto: true,
-        },
-      },
     };
 
-    let plugins = { ...internalPlugins };
-    if (props && props.plugins) {
-      this._checkPlugin(props.plugins);
+    if (scrollbar)
+      internalPlugins = Object.assign({}, internalPlugins, {
+        scrollbar: {
+          class: Scrollbar,
+          options: {
+            namespace: "scrollbar",
+            auto: true,
+            autoProps: scrollbar,
+          },
+        },
+      });
 
-      plugins = Object.assign({}, plugins, props.plugins);
-    }
-    // 全局配置信息
-    this.config = deepMerge(DEFAULT_PROPS, Object.assign({}, props, { plugins }));
+    this.config.plugins = Object.assign({}, internalPlugins, this.config.plugins);
+
     // 初始化各个模块
     this.EMITTER = new Emitter();
     this.ERR = new Err();
@@ -98,15 +102,58 @@ class Core {
     // 将内置插件的实例绑定到Core上
     this._bindInsidePlugin();
 
+    // 初始化
+    this._initialized();
     // 监听事件
     this._listener();
   }
 
+  _initialized() {
+    const { width, height, ratio } = this.canvas.getSize();
+    this.width = width / ratio;
+    this.height = height / ratio;
+    this.viewWidth = this.width;
+    this.viewHeight = this.height;
+
+    if (this.scrollbar) {
+      const { weight } = this.scrollbar.options;
+
+      if (this.scrollbar.hasHScrollbar) this.viewHeight -= weight;
+      if (this.scrollbar.hasVScrollbar) this.viewWidth -= weight;
+    }
+
+    const { data, extraColCount, extraRowCount } = this.config;
+    if (!data) {
+      const { row, col, rowSize, colSize } = this.config;
+    } else {
+      this.data = this.parseData(this.config.data);
+
+      this.viewData = this._filterViewData(
+        this.data,
+        this.viewWidth,
+        this.height,
+        extraRowCount,
+        extraColCount,
+      );
+      this.renderingData = this._filterRenderingData(this.viewData);
+    }
+  }
+
+  /**
+   * 检查外部plugin是否占有内置插件的namespace
+   *
+   * @author FreMaNgo
+   * @date 2019-08-13
+   * @private
+   * @param {PluginCollection_I} plugins 插件集合
+   * @memberof Core
+   */
   private _checkPlugin(plugins: PluginCollection_I) {
+    if (!plugins) return;
     for (let key of Object.keys(plugins)) {
       if (INTERNAL_PLUGIN_NAMESPACES.indexOf(key) < 0) {
         this.ERR.pop(
-          `please checked register plugin's namespace, [${INTERNAL_PLUGIN_NAMESPACES}] list is not use.`,
+          `please checked register plugin's namespace, you can't use [${INTERNAL_PLUGIN_NAMESPACES}] list name.`,
         );
       }
     }
@@ -205,9 +252,11 @@ class Core {
    * @memberof Core
    */
   draw(props: RenderingData_I) {
+    // 这里是执行Plugin内的beforeDraw方法，在渲染之前拿到viewData和rendingData
+    // 最终渲染之前，最后一次修改rendingData的地方
     const handleMethods = this.PLUGINS.getBeforeDrawMethods();
     props = handleMethods.reduce((preVal, currentVal) => {
-      return currentVal(preVal);
+      return currentVal(this.viewData, preVal);
     }, props);
 
     const { line, rect, text } = props;
@@ -378,6 +427,46 @@ class Core {
   }
 
   /**
+   * 解析传入的data到原始集合
+   *
+   * @author FreMaNgo
+   * @date 2019-08-13
+   * @param {Data_I} data
+   * @returns {Data_I}
+   * @memberof Core
+   */
+  parseData(data: Data_I): Data_I {
+    const _data = Object.assign({}, DATA, data);
+    const { items, rowSize, colSize } = _data;
+    const resultRows: RowData_I[] = [];
+
+    items.forEach((row: RowData_I | string[] | number[], rowIndex: number) => {
+      let _row: RowData_I;
+
+      if (isArray(row)) {
+        _row = Object.assign({}, ROW_DATA, {
+          id: Symbol(),
+          index: rowIndex,
+          size: rowSize,
+          items: this._parseItems(row),
+        });
+      } else {
+        _row = Object.assign({}, ROW_DATA, <RowData_I>row);
+        const { id, index, items } = _row;
+        if (isNull(id) || isUndefined(id)) _row.id = Symbol();
+        if (isNull(index) || isUndefined(index)) _row.index = rowIndex;
+        // _row.items = this._parseItems(items);
+      }
+
+      resultRows.push(_row);
+    });
+
+    return data;
+  }
+
+  private _parseItems(cells: CellData_I[] | string[] | number[], options?: object) {}
+
+  /**
    * 过滤原始集合到视图集合
    *
    * @author FreMaNgo
@@ -410,7 +499,9 @@ class Core {
    * @param {Data_I} data 视图集合
    * @memberof Core
    */
-  private _filterRenderingData(data: Data_I) {}
+  private _filterRenderingData(data: Data_I): RenderingData_I {
+    return {};
+  }
 
   private _registerPlugins() {
     const { plugins } = this.config;

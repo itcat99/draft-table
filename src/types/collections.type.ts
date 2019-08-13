@@ -8,18 +8,17 @@ import Text from "components/Text";
 enum CellType_Enum {
   PLUGIN = "plugin", // 插件类型
   TEXT = "text", // 文本类型
-  VOID = "void", // 空类型
 }
 
 type CellValue_Type = Plugin | string | undefined | null | number; // 插件实例或字符串
 
-interface customStyle_I<T> {
-  (collection: T, data?: Data_I): {
-    line?: LineStyle_I;
-    rect?: RectStyle_I;
-    text?: TextStyle_I;
-  };
-}
+// interface customStyle_I<T, M> {
+//   (collection: T, data?: Data_I<M>): {
+//     line?: LineStyle_I;
+//     rect?: RectStyle_I;
+//     text?: TextStyle_I;
+//   };
+// }
 
 interface CommonItem_I {
   [key: string]: any;
@@ -29,6 +28,7 @@ interface CommonItem_I {
   locked: boolean; // 是否锁定
   hidden: boolean; // 是否隐藏
   selected: boolean; // 是否选中
+  size?: number; // row的height或col的width
 }
 
 interface Cell_I {
@@ -38,8 +38,6 @@ interface Cell_I {
   type?: CellType_Enum; // 格子的类型
   value?: CellValue_Type; // 格子的值
   selected?: boolean; // 是否选中
-  width?: number; // 文字宽度
-  height?: number; // 文字高度
 }
 
 // 行集合
@@ -53,24 +51,62 @@ export interface ColItem_I extends CommonItem_I {
 }
 
 // row或col的原始集合
-export interface Collection_I<T> {
-  customStyle?: customStyle_I<T>; // 自定义样式回调函数
-  items?: T; // 集合内容
-}
+// export interface Collection_I<T> {
+//   customStyle?: customStyle_I<T>; // 自定义样式回调函数
+//   items?: T; // 集合内容
+// }
 
-export interface Data_I {
-  rows?: Collection_I<Map<Id_Type, RowItem_I>>;
-  cols?: Collection_I<Map<Id_Type, ColItem_I>>;
-}
+// export interface Data_I {
+//   rows?: Collection_I<RowItem_I[]>;
+//   cols?: Collection_I<ColItem_I[]>;
+// }
 
-// 最终绘制的集合
+// 最终绘制的集合结构
 export interface FinalCollection_I<T, M> {
   style: T;
   data: M[];
 }
 
+// 渲染集合
 export interface RenderingData_I {
   line?: FinalCollection_I<LineStyle_I, Line>[];
   rect?: FinalCollection_I<RectStyle_I, Rect>[];
   text?: FinalCollection_I<TextStyle_I, Text>[];
+}
+
+export interface Data_I {
+  hidden?: boolean;
+  adaptive?: boolean;
+  rowSize?: number;
+  colSize?: number;
+  items?: string[][] | number[][] | RowData_I[];
+  style?: Function;
+}
+
+export interface RowData_I {
+  id?: Id_Type;
+  index?: number;
+  hidden?: boolean;
+  merge?: boolean;
+  selected?: boolean;
+  locked?: boolean;
+  adaptive?: boolean;
+  size?: number;
+  items?: string[] | number[] | CellData_I[];
+  style?: Function;
+  pos?: Pos_Type;
+}
+
+export interface CellData_I {
+  id?: Id_Type;
+  index?: number;
+  type?: CellType_Enum;
+  value?: CellValue_Type;
+  size?: number;
+  merge?: boolean;
+  hidden?: boolean;
+  selected?: boolean;
+  locked?: boolean;
+  adaptive?: boolean;
+  pos?: Pos_Type;
 }

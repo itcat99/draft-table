@@ -1,7 +1,7 @@
 import Emitter from "./Emitter";
 
 import { Context_I } from "types/common.type";
-import { RenderingData_I } from "types/collections.type";
+import { RenderingData_I, Data_I } from "types/collections.type";
 import { Callback_I } from "types/emitter.type";
 
 class Plugin {
@@ -48,13 +48,14 @@ class Plugin {
    * 接受旧参数，返回新参数
    *
    * @author FreMaNgo
-   * @date 2019-08-09
-   * @param {DrawProps_I} props 旧的参数
-   * @returns 返回新的绘制参数
+   * @date 2019-08-13
+   * @param {Data_I} viewData 视图集合
+   * @param {RenderingData_I} renderingData 渲染集合
+   * @returns {RenderingData_I} 返回渲染集合
    * @memberof Plugin
    */
-  beforeDraw(props: RenderingData_I): RenderingData_I {
-    return props;
+  beforeDraw(viewData: Data_I, renderingData: RenderingData_I): RenderingData_I {
+    return renderingData;
   }
 
   getPlugin<T>(name: string): T | Plugin {
