@@ -13,6 +13,9 @@ const data = {
 
 const table = new DraftTable({
   data,
+  style: {
+    fillStyle: "lightblue",
+  },
   font: {
     size: 14,
   },

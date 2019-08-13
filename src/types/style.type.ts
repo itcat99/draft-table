@@ -40,7 +40,7 @@ export interface Style_I {
 // 绘制的Line样式
 export interface LineStyle_I {
   color?: Color_Type;
-  weight?: number;
+  lineWidth?: number;
 }
 // 绘制的Rect样式
 export interface RectStyle_I {

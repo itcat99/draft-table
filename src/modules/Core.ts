@@ -15,7 +15,13 @@ import Scrollbar from "plugins/Scrollbar";
 import { Config_I, Id_Type } from "types/common.type";
 import { LineStyle_I, RectStyle_I, TextStyle_I } from "types/style.type";
 import { RegisterOptions_I, PluginCollection_I } from "types/plugins.type";
-import { Data_I, RenderingData_I, RowData_I, CellData_I } from "types/collections.type";
+import {
+  Data_I,
+  RenderingData_I,
+  RowData_I,
+  CellData_I,
+  FinalCollection_I,
+} from "types/collections.type";
 import { Callback_I } from "types/emitter.type";
 import { deepMerge, generatorFont } from "helpers";
 
@@ -45,6 +51,7 @@ class Core {
   data: Data_I; // 原始集合
   viewData: Data_I; // 视图集合
   renderingData: RenderingData_I;
+  wrapperLines: FinalCollection_I<LineStyle_I, Line>;
 
   /**
    * 初始化：emitter,plugins,collection,store,err
@@ -109,11 +116,14 @@ class Core {
   }
 
   _initialized() {
+    const { fillStyle } = this.config.style;
     const { width, height, ratio } = this.canvas.getSize();
     this.width = width / ratio;
     this.height = height / ratio;
     this.viewWidth = this.width;
     this.viewHeight = this.height;
+
+    this.canvas.el.style.border = `1px solid ${fillStyle}`;
 
     if (this.scrollbar) {
       const { weight } = this.scrollbar.options;
@@ -137,6 +147,8 @@ class Core {
       );
       this.renderingData = this._filterRenderingData(this.viewData);
     }
+
+    this.draw();
   }
 
   /**
@@ -251,7 +263,7 @@ class Core {
    * @date 2019-08-09
    * @memberof Core
    */
-  draw(props: RenderingData_I) {
+  draw(props: RenderingData_I = {}) {
     // 这里是执行Plugin内的beforeDraw方法，在渲染之前拿到viewData和rendingData
     // 最终渲染之前，最后一次修改rendingData的地方
     const handleMethods = this.PLUGINS.getBeforeDrawMethods();
@@ -296,9 +308,9 @@ class Core {
     if (!style) {
       this.canvas.drawLine(lines);
     } else {
-      const { color, weight } = style;
+      const { color, lineWidth } = style;
       this.canvas.setAttrs(
-        { fillStroke: color, lineWeight: weight },
+        { fillStroke: color, lineWidth },
         {
           once: true,
           cb: () => {
