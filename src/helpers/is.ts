@@ -5,21 +5,21 @@
  * @param {any} obj
  * @return {boolean}
  */
-export const isObj = (obj: any) => Object.prototype.toString.call(obj).indexOf("Object") >= 0;
+export const isObj = (obj: any): boolean => Object.prototype.toString.call(obj).indexOf("Object") >= 0;
 
 /**
  * 是否是一个数组
  * @param {any[]} arr
  * @return {boolean}
  */
-export const isArr = (arr: any) => Array.isArray(arr);
+export const isArr = (arr: any): boolean => Array.isArray(arr);
 
 /**
  * 是否是一个字符串
  * @param {any} str
  * @return {boolean}
  */
-export const isStr = (str: any) => typeof str === "string";
+export const isStr = (str: any): boolean => typeof str === "string";
 
 /**
  * 是否是一个数字
@@ -27,7 +27,7 @@ export const isStr = (str: any) => typeof str === "string";
  * @param {boolean} strict 严格模式，默认开启。当开启严格模式后，仅当num是真数字才返回true，关闭后，也可以检测string类型的数字
  * @return {boolean}
  */
-export const isNum = (num: any, strict: boolean = true) =>
+export const isNum = (num: any, strict: boolean = true): boolean =>
   typeof (strict ? num : num * 1) === "number";
 
 /**
@@ -35,17 +35,17 @@ export const isNum = (num: any, strict: boolean = true) =>
  * @param {any} num
  * @return {boolean}
  */
-export const isStrNum = (num: any) => isStr(num) && isNum(num, false);
+export const isStrNum = (num: any): boolean => isStr(num) && isNum(num, false);
 
 /**
  * 是否是一个函数
  * @param {any} fun
  * @returns {boolean}
  */
-export const isFun = (fun: any) => Object.prototype.toString.call(fun).indexOf("Function") >= 0;
+export const isFun = (fun: any): boolean => Object.prototype.toString.call(fun).indexOf("Function") >= 0;
 
 /**
  * 是否是一个canvas dom
  * @param {DOM} dom
  */
-export const isCanvas = (dom: any) => dom.nodeName.toLowerCase() === "canvas";
+export const isCanvas = (dom: any): boolean => dom.nodeName.toLowerCase() === "canvas";
