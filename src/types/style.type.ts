@@ -50,3 +50,19 @@ export interface RectStyle_I {
 export interface TextStyle_I extends Font_I {
   color: Color_Type;
 }
+
+export interface DataStyle_I {
+  color?: Color_Type;
+  bgColor?: Color_Type;
+  lineColor?: Color_Type;
+  fontSize?: number | string;
+  fontFamily?: string;
+  fontWeight?: number | string;
+  fontStyle?: string;
+  lineHeight?: number | string;
+  fontVariant?: string;
+  fontStretch?: string;
+  textAlign?: TextAlign_Enum;
+  textBaseline?: TextBaseline_Enum;
+  lineWidth?: number;
+}

@@ -1,6 +1,6 @@
 import { PluginsProps_I, PluginCollection_I } from "./plugins.type";
 import Plugins from "modules/Plugins";
-import { Data_I, RowData_I, CellData_I } from "./collections.type";
+import { Data_I } from "./collections.type";
 import { Font_I, Style_I } from "./style.type";
 import { ScrollbarProps_I } from "./plugins/scrollbar.type";
 

@@ -1,7 +1,7 @@
 import { Rect_I } from "types/plugins/canvas.types";
 import { Pos_Type } from "types/common.type";
 import Component from "modules/Component";
-import { isNum } from "helpers/is";
+import { isNumber } from "util";
 
 class Rect extends Component {
   private _pos: Pos_Type;
@@ -22,8 +22,8 @@ class Rect extends Component {
   }
 
   setPos({ x, y }: { x?: number; y?: number }) {
-    const nextX = !isNum(x) && !x ? this._pos[0] : x;
-    const nextY = !isNum(y) && !y ? this._pos[1] : y;
+    const nextX = !isNumber(x) && !x ? this._pos[0] : x;
+    const nextY = !isNumber(y) && !y ? this._pos[1] : y;
 
     const pos: Pos_Type = [nextX, nextY];
     this._pos = pos;

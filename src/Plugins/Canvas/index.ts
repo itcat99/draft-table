@@ -1,5 +1,5 @@
 import Plugin from "modules/Plugin";
-import { isCanvas, isNum } from "helpers/is";
+import { isCanvas } from "helpers/is";
 
 // components
 import Text from "components/Text";
@@ -13,6 +13,7 @@ import { Config_I, Context_I } from "types/common.type";
 import { Font_I } from "types/style.type";
 import { Attrs_I, Context2d_I, Color_Type, SetAttrsOptions_I } from "types/plugins/canvas.types";
 import { generatorFont } from "helpers";
+import { isNumber } from "util";
 
 class Canvas extends Plugin {
   public config: Config_I;
@@ -346,7 +347,7 @@ class Canvas extends Plugin {
   private _setAttrs(attrs: Attrs_I, ctx: Context2d_I) {
     for (let key of Object.keys(attrs)) {
       const val = attrs[key];
-      if (!isNum(val) && !val) continue;
+      if (!isNumber(val) && !val) continue;
       if (key === "font") this.fontStyle = val;
       ctx[key] = val;
     }

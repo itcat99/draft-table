@@ -5,7 +5,14 @@ import Plugin from "./Plugin";
 import Err from "./Err";
 
 import DEFAULT_PROPS from "../config";
-import { INTERNAL_PLUGIN_NAMESPACES, ROW_DATA, DATA } from "../constants";
+import {
+  INTERNAL_PLUGIN_NAMESPACES,
+  ROW_DATA,
+  DATA,
+  ORIGIN_X,
+  ORIGIN_Y,
+  CELL_DATA,
+} from "../constants";
 
 /* internal Plugins */
 import Canvas from "plugins/Canvas";
@@ -16,11 +23,13 @@ import { Config_I, Id_Type } from "types/common.type";
 import { LineStyle_I, RectStyle_I, TextStyle_I } from "types/style.type";
 import { RegisterOptions_I, PluginCollection_I } from "types/plugins.type";
 import {
+  CellData_I,
+  CellDataArr_Type,
   Data_I,
+  FinalCollection_I,
   RenderingData_I,
   RowData_I,
-  CellData_I,
-  FinalCollection_I,
+  RowDataArr_Type,
 } from "types/collections.type";
 import { Callback_I } from "types/emitter.type";
 import { deepMerge, generatorFont } from "helpers";
@@ -28,7 +37,8 @@ import { deepMerge, generatorFont } from "helpers";
 import Line from "components/Line";
 import Rect from "components/Rect";
 import Text from "components/Text";
-import { isUndefined, isNull, isArray } from "util";
+import { isArray, isNumber, isString } from "util";
+import { BarType_Enum } from "types/plugins/scrollbar.type";
 
 class Core {
   public COLLECTIONS: any;
@@ -44,14 +54,20 @@ class Core {
   public scrollbar: Scrollbar;
 
   // === Informations === //
-  width: number; // canvas宽度
-  height: number; // canvas高度
-  viewWidth: number; // 可绘制区域宽度
-  viewHeight: number; // 可绘制区域高度
-  data: Data_I; // 原始集合
-  viewData: Data_I; // 视图集合
-  renderingData: RenderingData_I;
-  wrapperLines: FinalCollection_I<LineStyle_I, Line>;
+  public width: number; // canvas宽度
+  public height: number; // canvas高度
+  public viewWidth: number; // 可绘制区域宽度
+  public viewHeight: number; // 可绘制区域高度
+  public data: Data_I; // 原始集合
+  public viewData: Data_I; // 视图集合
+  public renderingData: RenderingData_I;
+  public wrapperLines: FinalCollection_I<LineStyle_I, Line>;
+
+  public dataHeight: number; // 数据总长度
+  public dataWidth: number; // 数据总宽度
+  public currentRowIndex: number; // 当前第一个row的索引
+  public currentOffsetY: number; // 当前Y轴偏移量
+  public currentOffsetX: number; // 当前X轴偏移量
 
   /**
    * 初始化：emitter,plugins,collection,store,err
@@ -132,23 +148,13 @@ class Core {
       if (this.scrollbar.hasVScrollbar) this.viewWidth -= weight;
     }
 
-    const { data, extraColCount, extraRowCount } = this.config;
-    if (!data) {
-      const { row, col, rowSize, colSize } = this.config;
-    } else {
-      this.data = this.parseData(this.config.data);
+    this.currentRowIndex = 0;
+    this.data = this._parseData(this.config.data);
+    this.viewData = this._getViewData();
 
-      this.viewData = this._filterViewData(
-        this.data,
-        this.viewWidth,
-        this.height,
-        extraRowCount,
-        extraColCount,
-      );
-      this.renderingData = this._filterRenderingData(this.viewData);
-    }
-
-    this.draw();
+    console.log("this.viewData", this.viewData);
+    console.log("this.data: ", this.data);
+    // this.draw();
   }
 
   /**
@@ -439,44 +445,111 @@ class Core {
   }
 
   /**
-   * 解析传入的data到原始集合
+   * 解析传入的data到原始集合结构
    *
    * @author FreMaNgo
    * @date 2019-08-13
-   * @param {Data_I} data
+   * @param {Data_I} data 传入的集合
+   * @param {number} deep 当前集合的深度
    * @returns {Data_I}
    * @memberof Core
    */
-  parseData(data: Data_I): Data_I {
-    const _data = Object.assign({}, DATA, data);
-    const { items, rowSize, colSize } = _data;
-    const resultRows: RowData_I[] = [];
+  private _parseData(data: Data_I, deep: number = 0): Data_I {
+    const _data = Object.assign({}, DATA, data, { deep });
+    const { items } = _data;
 
-    items.forEach((row: RowData_I | string[] | number[], rowIndex: number) => {
-      let _row: RowData_I;
+    _data.items = <RowData_I[]>this._normailzedRows(items, deep);
+    return _data;
+  }
+
+  /**
+   * 将传入的row转化为原始集合的row结构
+   *
+   * @author FreMaNgo
+   * @date 2019-08-15
+   * @private
+   * @param {RowDataArr_Type} rows 传入集合的rows
+   * @param {number} deep 当前集合的深度
+   * @returns
+   * @memberof Core
+   */
+  private _normailzedRows(rows: RowDataArr_Type, deep: number = 0) {
+    let result: RowData_I[] = [];
+    let currentOffsetY = ORIGIN_Y;
+
+    for (let index = 0; index < rows.length; index++) {
+      const row = rows[index];
+      let _row: RowData_I = {};
 
       if (isArray(row)) {
         _row = Object.assign({}, ROW_DATA, {
-          id: Symbol(),
-          index: rowIndex,
-          size: rowSize,
-          items: this._parseItems(row),
+          items: row,
         });
       } else {
-        _row = Object.assign({}, ROW_DATA, <RowData_I>row);
-        const { id, index, items } = _row;
-        if (isNull(id) || isUndefined(id)) _row.id = Symbol();
-        if (isNull(index) || isUndefined(index)) _row.index = rowIndex;
-        // _row.items = this._parseItems(items);
+        _row = deepMerge(ROW_DATA, Object.assign({}, row));
       }
 
-      resultRows.push(_row);
-    });
+      const { size, items, id, children } = _row;
+      _row = Object.assign({}, _row, {
+        index,
+        id: id || Symbol(),
+        pos: [ORIGIN_X, currentOffsetY],
+      });
 
-    return data;
+      _row.items = <CellData_I[]>this._normailzedCells(items, currentOffsetY);
+      currentOffsetY += size;
+
+      if (children) {
+        _row.children = this._parseData(children, deep + 1);
+      }
+
+      result.push(_row);
+    }
+
+    return result;
   }
 
-  private _parseItems(cells: CellData_I[] | string[] | number[], options?: object) {}
+  /**
+   * 将传入集合的cell转化为原始集合的cell结构
+   *
+   * @author FreMaNgo
+   * @date 2019-08-16
+   * @private
+   * @param {CellDataArr_Type} cells cell集合
+   * @param {number} rowOffset cell所在行的Y轴偏移量
+   * @returns
+   * @memberof Core
+   */
+  private _normailzedCells(cells: CellDataArr_Type, rowOffset: number) {
+    let result: CellData_I[] = [],
+      currentOffsetX = ORIGIN_X;
+
+    for (let index = 0; index < cells.length; index++) {
+      let cell = cells[index];
+      let _cell: CellData_I = {};
+
+      if (isNumber(cell) || isString(cell)) {
+        _cell = Object.assign({}, CELL_DATA, {
+          value: cell,
+        });
+      } else {
+        _cell = deepMerge(CELL_DATA, Object.assign({}, cell));
+      }
+
+      const { size, id } = _cell;
+      _cell = Object.assign({}, _cell, {
+        index,
+        id: id || Symbol(),
+        pos: [currentOffsetX, rowOffset],
+      });
+
+      currentOffsetX += size;
+
+      result.push(_cell);
+    }
+
+    return result;
+  }
 
   /**
    * 过滤原始集合到视图集合
@@ -484,22 +557,19 @@ class Core {
    * @author FreMaNgo
    * @date 2019-08-12
    * @private
-   * @param {Data_I} data 原始集合
-   * @param {number} width 渲染视图宽
-   * @param {number} height 渲染视图高
-   * @param {number} extraRowCount 额外行数量
-   * @param {number} extraColCount 额外列数量
    * @returns {Data_I} 返回视图集合
    * @memberof Core
    */
-  private _filterViewData(
-    data: Data_I,
-    width: number,
-    height: number,
-    extraRowCount: number,
-    extraColCount: number,
-  ): Data_I {
-    return data;
+  private _getViewData(offset: number = 0, direction: BarType_Enum = BarType_Enum.H): Data_I {
+    const height = this.viewHeight,
+      width = this.viewWidth,
+      originData = this.data;
+
+    const { items, ...otherProps } = originData;
+    const resultData: Data_I = { ...otherProps };
+    const resultRows: RowData_I[] = [];
+
+    return resultData;
   }
 
   /**
