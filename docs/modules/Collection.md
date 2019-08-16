@@ -19,7 +19,12 @@
 
 ## 使用方式：
 
-抛出一个实例，比如new Collection()，入参要传入的集合
+抛出一个实例，比如new Collection()，入参为传入的集合
+```
+const demoArray = [1,2,3,4];
+const collectionDemoArray = collection(demoArray);
+const resultIndex = collectionDemoArray.search("1");
+```
 
 
 
