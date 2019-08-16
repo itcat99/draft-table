@@ -17,3 +17,4 @@ class Collection {
     console.info(this.items);
   }
 }
+export const collection = (collection: any) =>  new Collection(collection);
