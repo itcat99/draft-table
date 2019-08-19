@@ -26,5 +26,13 @@ const collectionDemoArray = collection(demoArray);
 const resultIndex = collectionDemoArray.search("1");
 ```
 
+## 功能实现随笔
+首先，我定义了一个类，这个类可以导出一个实例，实例具有相关的操作方法
+
+如何验证实例的方法？
+书写测试用例，
+但是类的测试用例应该如何写？
+new 一个该类的实例，测试实例的方法
+
 
 

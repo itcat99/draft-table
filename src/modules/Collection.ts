@@ -3,18 +3,20 @@
  * 主要的集合存储目标，数组 和 map
  */
 
-import * as IS from "../helpers/is";
+import { isObject } from "util";
 class Collection {
   private items: Array<any> | Object;
   constructor(collect: any) {
-    if (collect !== undefined || !Array.isArray(collect) || !IS.isObj(collect)) {
+    if (collect !== undefined || !Array.isArray(collect) || !isObject(collect)) {
       this.items = [collect];
     } else {
       this.items = collect;
     }
   }
   search() {
-    console.info(this.items);
+
   }
 }
-export const collection = (collection: any) =>  new Collection(collection);
+const collection = (collection: any) => new Collection(collection);
+
+export default {collection};
