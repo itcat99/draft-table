@@ -10,7 +10,7 @@ import { isNumber, isString, isArray } from "util";
 import { deepMerge } from "helpers";
 
 interface DataProps_I {
-  data: Data_I;
+  data: RowDataArr_Type;
   width: number;
   height: number;
 }
@@ -24,12 +24,13 @@ class Data {
   private viewData: Data_I; // 视图集合
 
   private index: number[]; // 当前行的索引
+  private deep: number; // 当前检查的深度
 
   private currentOffsetX: number; // 当前横向偏移量
   private currentOffsetY: number; // 当前纵向偏移量
 
   constructor(public props: DataProps_I) {
-    this.data = this.props.data;
+    this.data = this._parseData(this.props.data);
     this.index = [0];
   }
 
@@ -43,12 +44,30 @@ class Data {
    * @returns {Data_I}
    * @memberof Core
    */
-  private _parseData(data: Data_I, deep: number = 0): Data_I {
+  private _parseData(data: RowDataArr_Type, deep: number = 0): Data_I {
     const _data = Object.assign({}, DATA, data, { deep });
     const { items } = _data;
 
     _data.items = <RowData_I[]>this._normailzedRows(items, deep);
     return _data;
+  }
+
+  /**
+   * 计算当前视图集合
+   *
+   * @author FreMaNgo
+   * @date 2019-08-20
+   * @private
+   * @param {number} offset 偏移量
+   * @param {boolean} [v=true] 视图方向，默认纵向
+   * @memberof Data
+   */
+  private _parseViewData(offset: number, v: boolean = true) {
+    let currentOffset = v ? this.currentOffsetY : this.currentOffsetX;
+    currentOffset += offset;
+    let currentIndex = this.index;
+
+    const currentRow = this.getRowByIndex(this.index, <RowData_I[]>this.originData.items);
   }
 
   /**
@@ -63,6 +82,7 @@ class Data {
    * @memberof Core
    */
   private _normailzedRows(rows: RowDataArr_Type, deep: number = 0) {
+    if (!rows) return [];
     let result: RowData_I[] = [];
     let currentOffsetY = ORIGIN_Y;
 
@@ -89,7 +109,7 @@ class Data {
       currentOffsetY += size;
 
       if (children) {
-        _row.children = this._parseData(children, deep + 1);
+        _row.children = this._parseData(children.items, deep + 1);
       }
 
       result.push(_row);
@@ -167,6 +187,32 @@ class Data {
     }
 
     return result;
+  }
+
+  /**
+   * 获取下一个可用的Row
+   *
+   * @author FreMaNgo
+   * @date 2019-08-21
+   * @private
+   * @param {number} offset 偏移量
+   * @param {RowData_I} currentRow 当前的row
+   * @returns {RowData_I}
+   * @memberof Data
+   */
+  private getNextRow(offset: number, currentRow: RowData_I): RowData_I {
+    const index = [].concat(this.index);
+    let nextRow = this.getRowByIndex(index, <RowData_I[]>this.data.items);
+    if (nextRow.hidden) {
+      return this.getNextRow(offset, nextRow);
+    }
+
+    const currentOffset = nextRow.size - offset;
+    if (currentOffset >= 0) {
+      return this.getNextRow(currentOffset, nextRow);
+    }
+
+    return nextRow;
   }
 }
 

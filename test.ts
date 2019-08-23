@@ -1,13 +1,8 @@
-const arr = [];
-const count = 200000;
+import Data from "./src/modules/Data";
 
-const startTime = Date.now();
-for (let i = 0; i < count; i++) {
-  const num = Math.random();
-  if (num > 0.5) arr.push();
-}
+const data = [[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]];
+const collection = new Data({ data, width: 400, height: 300 });
 
-console.log("use: ", Date.now() - startTime, "ms");
 // console.log("arr: ", arr);
 
 // /*

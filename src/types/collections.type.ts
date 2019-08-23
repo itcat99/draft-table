@@ -66,9 +66,11 @@ export interface RenderingData_I {
 }
 
 export interface Data_I {
+  parentId?: Id_Type;
+  parentIndex?: number;
   colSize?: number;
   customStyle?: Function;
-  deep: number;
+  deep?: number;
   hidden?: boolean;
   items?: RowDataArr_Type;
   rowSize?: number;
@@ -76,7 +78,7 @@ export interface Data_I {
 }
 
 export interface RowData_I {
-  children?: ChildrenRowData_I;
+  children?: Data_I;
   customStyle?: Function;
   hidden?: boolean;
   id?: Id_Type;
@@ -89,11 +91,6 @@ export interface RowData_I {
   size?: number;
   style?: DataStyle_I;
   wrap?: boolean;
-}
-
-export interface ChildrenRowData_I extends Data_I {
-  parentId?: Id_Type;
-  parentIndex?: number;
 }
 
 export interface CellData_I {
