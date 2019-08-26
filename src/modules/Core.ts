@@ -149,11 +149,8 @@ class Core {
     }
 
     this.currentRowIndex = 0;
-    this.data = this._parseData(this.config.data);
-    this.viewData = this._getViewData();
-
-    console.log("this.viewData", this.viewData);
-    console.log("this.data: ", this.data);
+    // this.data = this._parseData(this.config.data);
+    // this.viewData = this._getViewData();
     // this.draw();
   }
 
@@ -444,146 +441,146 @@ class Core {
     );
   }
 
-  /**
-   * 解析传入的data到原始集合结构
-   *
-   * @author FreMaNgo
-   * @date 2019-08-13
-   * @param {Data_I} data 传入的集合
-   * @param {number} deep 当前集合的深度
-   * @returns {Data_I}
-   * @memberof Core
-   */
-  private _parseData(data: Data_I, deep: number = 0): Data_I {
-    const _data = Object.assign({}, DATA, data, { deep });
-    const { items } = _data;
+  // /**
+  //  * 解析传入的data到原始集合结构
+  //  *
+  //  * @author FreMaNgo
+  //  * @date 2019-08-13
+  //  * @param {Data_I} data 传入的集合
+  //  * @param {number} deep 当前集合的深度
+  //  * @returns {Data_I}
+  //  * @memberof Core
+  //  */
+  // private _parseData(data: Data_I, deep: number = 0): Data_I {
+  //   const _data = Object.assign({}, DATA, data, { deep });
+  //   const { items } = _data;
 
-    _data.items = <RowData_I[]>this._normailzedRows(items, deep);
-    return _data;
-  }
+  //   _data.items = <RowData_I[]>this._normailzedRows(items, deep);
+  //   return _data;
+  // }
 
-  /**
-   * 将传入的row转化为原始集合的row结构
-   *
-   * @author FreMaNgo
-   * @date 2019-08-15
-   * @private
-   * @param {RowDataArr_Type} rows 传入集合的rows
-   * @param {number} deep 当前集合的深度
-   * @returns
-   * @memberof Core
-   */
-  private _normailzedRows(rows: RowDataArr_Type, deep: number = 0) {
-    let result: RowData_I[] = [];
-    let currentOffsetY = ORIGIN_Y;
+  // /**
+  //  * 将传入的row转化为原始集合的row结构
+  //  *
+  //  * @author FreMaNgo
+  //  * @date 2019-08-15
+  //  * @private
+  //  * @param {RowDataArr_Type} rows 传入集合的rows
+  //  * @param {number} deep 当前集合的深度
+  //  * @returns
+  //  * @memberof Core
+  //  */
+  // private _normailzedRows(rows: RowDataArr_Type, deep: number = 0) {
+  //   let result: RowData_I[] = [];
+  //   let currentOffsetY = ORIGIN_Y;
 
-    for (let index = 0; index < rows.length; index++) {
-      const row = rows[index];
-      let _row: RowData_I = {};
+  //   for (let index = 0; index < rows.length; index++) {
+  //     const row = rows[index];
+  //     let _row: RowData_I = {};
 
-      if (isArray(row)) {
-        _row = Object.assign({}, ROW_DATA, {
-          items: row,
-        });
-      } else {
-        _row = deepMerge(ROW_DATA, Object.assign({}, row));
-      }
+  //     if (isArray(row)) {
+  //       _row = Object.assign({}, ROW_DATA, {
+  //         items: row,
+  //       });
+  //     } else {
+  //       _row = deepMerge(ROW_DATA, Object.assign({}, row));
+  //     }
 
-      const { size, items, id, children } = _row;
-      _row = Object.assign({}, _row, {
-        index,
-        id: id || Symbol(),
-        pos: [ORIGIN_X, currentOffsetY],
-      });
+  //     const { size, items, id, children } = _row;
+  //     _row = Object.assign({}, _row, {
+  //       index,
+  //       id: id || Symbol(),
+  //       pos: [ORIGIN_X, currentOffsetY],
+  //     });
 
-      _row.items = <CellData_I[]>this._normailzedCells(items, currentOffsetY);
-      currentOffsetY += size;
+  //     _row.items = <CellData_I[]>this._normailzedCells(items, currentOffsetY);
+  //     currentOffsetY += size;
 
-      if (children) {
-        _row.children = this._parseData(children, deep + 1);
-      }
+  //     if (children) {
+  //       _row.children = this._parseData(children, deep + 1);
+  //     }
 
-      result.push(_row);
-    }
+  //     result.push(_row);
+  //   }
 
-    return result;
-  }
+  //   return result;
+  // }
 
-  /**
-   * 将传入集合的cell转化为原始集合的cell结构
-   *
-   * @author FreMaNgo
-   * @date 2019-08-16
-   * @private
-   * @param {CellDataArr_Type} cells cell集合
-   * @param {number} rowOffset cell所在行的Y轴偏移量
-   * @returns
-   * @memberof Core
-   */
-  private _normailzedCells(cells: CellDataArr_Type, rowOffset: number) {
-    let result: CellData_I[] = [],
-      currentOffsetX = ORIGIN_X;
+  // /**
+  //  * 将传入集合的cell转化为原始集合的cell结构
+  //  *
+  //  * @author FreMaNgo
+  //  * @date 2019-08-16
+  //  * @private
+  //  * @param {CellDataArr_Type} cells cell集合
+  //  * @param {number} rowOffset cell所在行的Y轴偏移量
+  //  * @returns
+  //  * @memberof Core
+  //  */
+  // private _normailzedCells(cells: CellDataArr_Type, rowOffset: number) {
+  //   let result: CellData_I[] = [],
+  //     currentOffsetX = ORIGIN_X;
 
-    for (let index = 0; index < cells.length; index++) {
-      let cell = cells[index];
-      let _cell: CellData_I = {};
+  //   for (let index = 0; index < cells.length; index++) {
+  //     let cell = cells[index];
+  //     let _cell: CellData_I = {};
 
-      if (isNumber(cell) || isString(cell)) {
-        _cell = Object.assign({}, CELL_DATA, {
-          value: cell,
-        });
-      } else {
-        _cell = deepMerge(CELL_DATA, Object.assign({}, cell));
-      }
+  //     if (isNumber(cell) || isString(cell)) {
+  //       _cell = Object.assign({}, CELL_DATA, {
+  //         value: cell,
+  //       });
+  //     } else {
+  //       _cell = deepMerge(CELL_DATA, Object.assign({}, cell));
+  //     }
 
-      const { size, id } = _cell;
-      _cell = Object.assign({}, _cell, {
-        index,
-        id: id || Symbol(),
-        pos: [currentOffsetX, rowOffset],
-      });
+  //     const { size, id } = _cell;
+  //     _cell = Object.assign({}, _cell, {
+  //       index,
+  //       id: id || Symbol(),
+  //       pos: [currentOffsetX, rowOffset],
+  //     });
 
-      currentOffsetX += size;
+  //     currentOffsetX += size;
 
-      result.push(_cell);
-    }
+  //     result.push(_cell);
+  //   }
 
-    return result;
-  }
+  //   return result;
+  // }
 
-  /**
-   * 过滤原始集合到视图集合
-   *
-   * @author FreMaNgo
-   * @date 2019-08-12
-   * @private
-   * @returns {Data_I} 返回视图集合
-   * @memberof Core
-   */
-  private _getViewData(offset: number = 0, direction: BarType_Enum = BarType_Enum.H): Data_I {
-    const height = this.viewHeight,
-      width = this.viewWidth,
-      originData = this.data;
+  // /**
+  //  * 过滤原始集合到视图集合
+  //  *
+  //  * @author FreMaNgo
+  //  * @date 2019-08-12
+  //  * @private
+  //  * @returns {Data_I} 返回视图集合
+  //  * @memberof Core
+  //  */
+  // private _getViewData(offset: number = 0, direction: BarType_Enum = BarType_Enum.H): Data_I {
+  //   const height = this.viewHeight,
+  //     width = this.viewWidth,
+  //     originData = this.data;
 
-    const { items, ...otherProps } = originData;
-    const resultData: Data_I = { ...otherProps };
-    const resultRows: RowData_I[] = [];
+  //   const { items, ...otherProps } = originData;
+  //   const resultData: Data_I = { ...otherProps };
+  //   const resultRows: RowData_I[] = [];
 
-    return resultData;
-  }
+  //   return resultData;
+  // }
 
-  /**
-   * 过滤视图集合到渲染集合
-   *
-   * @author FreMaNgo
-   * @date 2019-08-12
-   * @private
-   * @param {Data_I} data 视图集合
-   * @memberof Core
-   */
-  private _filterRenderingData(data: Data_I): RenderingData_I {
-    return {};
-  }
+  // /**
+  //  * 过滤视图集合到渲染集合
+  //  *
+  //  * @author FreMaNgo
+  //  * @date 2019-08-12
+  //  * @private
+  //  * @param {Data_I} data 视图集合
+  //  * @memberof Core
+  //  */
+  // private _filterRenderingData(data: Data_I): RenderingData_I {
+  //   return {};
+  // }
 
   private _registerPlugins() {
     const { plugins } = this.config;

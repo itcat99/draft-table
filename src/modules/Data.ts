@@ -1,18 +1,57 @@
+/* 
+  目的：作为操作集合的模块
+  成员： 
+    0. data: 传入集合，就是new工程时随options传如的Data，只作为转化到源集合的初始集合
+    1. originData: 源集合， 保存了Data_I结构的所有数据的集合
+    2. viewData: 视图集合， 视图范围内的集合，过滤hidden行、列，生成mergeData
+    3. mergeData: 合并集合，包含所有合并的格子
+
+
+  ## 传入集合
+  传入集合有可能是一个简单的多维数组结构，这时候，需要转化成标准Data_I 接口的集合
+  data --> originData 只做一遍
+
+  ## 源集合
+  当从视图或API改变格子、行等的属性时，会改变orginData，然后再重新计算viewData。
+  同时，会重新计算合并集合
+  originData --> viewData 可能有许多遍，包含属性改变时、横纵轴偏移量改变时等
+  orginData --> mergeData 可能有许多遍，包含属性改变时、横纵轴偏移量改变时等
+
+  ## 视图集合
+  是作为传递给外部的最终数据
+
+  属性：
+  index: number []: 当前的行指针
+
+  方法：
+
+  get -> viewData_I
+  set: Data_I | SimpleData_I ----> OriginData_I ------> viewData_I
+*/
+
 import {
   Data_I,
   RowData_I,
   RowDataArr_Type,
   CellDataArr_Type,
   CellData_I,
+  SimpleData_I,
 } from "types/collections.type";
 import { DATA, ORIGIN_X, CELL_DATA, ORIGIN_Y, ROW_DATA } from "../constants";
 import { isNumber, isString, isArray } from "util";
 import { deepMerge } from "helpers";
+import { Id_Type } from "types/common.type";
 
 interface DataProps_I {
-  data: RowDataArr_Type;
+  data: Data_I | SimpleData_I; // 接受Data类型或者多维数组
   width: number;
   height: number;
+}
+
+interface ParseOpts_I {
+  deep: number;
+  parentIndex?: number[];
+  parentId?: Id_Type;
 }
 
 class Data {
@@ -30,12 +69,16 @@ class Data {
   private currentOffsetY: number; // 当前纵向偏移量
 
   constructor(public props: DataProps_I) {
-    this.data = this._parseData(this.props.data);
+    this.data = this.props.data;
+    this.originData = this._parseData(this.data);
+    this.viewData = this._parseViewData(this.originData);
     this.index = [0];
   }
 
   /**
    * 解析传入的data到原始集合结构
+   *
+   * 传入的有可能是简单结构的数据，需要转化成正常的Data_I接口
    *
    * @author FreMaNgo
    * @date 2019-08-13
@@ -44,30 +87,22 @@ class Data {
    * @returns {Data_I}
    * @memberof Core
    */
-  private _parseData(data: RowDataArr_Type, deep: number = 0): Data_I {
-    const _data = Object.assign({}, DATA, data, { deep });
-    const { items } = _data;
+  private _parseData(data: Data_I | SimpleData_I, opts: ParseOpts_I = { deep: 0 }): Data_I {
+    const { deep, parentId, parentIndex } = opts;
 
-    _data.items = <RowData_I[]>this._normailzedRows(items, deep);
+    let _data: Data_I = {};
+    if (isArray(data)) {
+      // 简单结构的数据，转化为正常Data_I的items
+      _data = Object.assign({}, DATA, { deep, rows: data });
+    } else {
+      _data = Object.assign({}, deepMerge(DATA, data), { deep });
+    }
+
+    if (parentId) _data.parentId = parentId;
+    if (parentIndex) _data.parentIndex = parentIndex;
+
+    _data.rows = <RowData_I[]>this._normailzedRows(_data.rows, deep);
     return _data;
-  }
-
-  /**
-   * 计算当前视图集合
-   *
-   * @author FreMaNgo
-   * @date 2019-08-20
-   * @private
-   * @param {number} offset 偏移量
-   * @param {boolean} [v=true] 视图方向，默认纵向
-   * @memberof Data
-   */
-  private _parseViewData(offset: number, v: boolean = true) {
-    let currentOffset = v ? this.currentOffsetY : this.currentOffsetX;
-    currentOffset += offset;
-    let currentIndex = this.index;
-
-    const currentRow = this.getRowByIndex(this.index, <RowData_I[]>this.originData.items);
   }
 
   /**
@@ -81,10 +116,9 @@ class Data {
    * @returns
    * @memberof Core
    */
-  private _normailzedRows(rows: RowDataArr_Type, deep: number = 0) {
+  private _normailzedRows(rows: RowDataArr_Type, deep: number = 0, index: number[] = this.index) {
     if (!rows) return [];
     let result: RowData_I[] = [];
-    let currentOffsetY = ORIGIN_Y;
 
     for (let index = 0; index < rows.length; index++) {
       const row = rows[index];
@@ -92,24 +126,29 @@ class Data {
 
       if (isArray(row)) {
         _row = Object.assign({}, ROW_DATA, {
-          items: row,
+          rows: row,
         });
       } else {
         _row = deepMerge(ROW_DATA, Object.assign({}, row));
       }
 
-      const { size, items, id, children } = _row;
+      const { cells, id, children } = _row;
       _row = Object.assign({}, _row, {
         index,
         id: id || Symbol(),
-        pos: [ORIGIN_X, currentOffsetY],
       });
 
-      _row.items = <CellData_I[]>this._normailzedCells(items, currentOffsetY);
-      currentOffsetY += size;
+      _row.cells = <CellData_I[]>this._normailzedCells(cells);
 
       if (children) {
-        _row.children = this._parseData(children.items, deep + 1);
+        const parentIndex = [].concat(index);
+        parentIndex[deep] = _row.index;
+
+        _row.children = this._parseData(children, {
+          deep: deep + 1,
+          parentId: _row.id,
+          parentIndex: parentIndex,
+        });
       }
 
       result.push(_row);
@@ -129,9 +168,8 @@ class Data {
    * @returns
    * @memberof Core
    */
-  private _normailzedCells(cells: CellDataArr_Type, rowOffset: number) {
-    let result: CellData_I[] = [],
-      currentOffsetX = ORIGIN_X;
+  private _normailzedCells(cells: CellDataArr_Type) {
+    let result: CellData_I[] = [];
 
     for (let index = 0; index < cells.length; index++) {
       let cell = cells[index];
@@ -145,19 +183,31 @@ class Data {
         _cell = deepMerge(CELL_DATA, Object.assign({}, cell));
       }
 
-      const { size, id } = _cell;
+      const { id } = _cell;
       _cell = Object.assign({}, _cell, {
         index,
         id: id || Symbol(),
-        pos: [currentOffsetX, rowOffset],
       });
-
-      currentOffsetX += size;
 
       result.push(_cell);
     }
 
     return result;
+  }
+
+  /**
+   * 计算当前视图集合
+   *
+   * @author FreMaNgo
+   * @date 2019-08-20
+   * @private
+   * @param {number} offset 偏移量
+   * @param {boolean} [v=true] 视图方向，默认纵向
+   * @memberof Data
+   */
+  private _parseViewData(data: Data_I, offset: number = 0, v: boolean = true) {
+    const viewData: Data_I = {};
+    return viewData;
   }
 
   /**
@@ -175,44 +225,154 @@ class Data {
    * @returns
    * @memberof Data
    */
-  getRowByIndex(index: number[], rows: RowData_I[]) {
-    let result: RowData_I;
+  getRowByIndex(rows: RowData_I[], index: number[]): RowData_I {
+    if (!rows) return; // 如果没有arr 返回
     const currentIndex = index[0];
-    const childIndex = index[1];
+    if (typeof currentIndex !== "number") return; // 如果传入的index没有值 返回
 
-    result = rows[currentIndex];
-    const children = result.children;
-    if (childIndex && children) {
-      result = this.getRowByIndex(index.slice(1), <RowData_I[]>children.items);
-    }
+    let result = rows[currentIndex];
+    if (!result) return; // 如果无法获取到value 返回
+    const nextIndex = index[1];
+    if (typeof nextIndex !== "number") return result; // 如果没有下一个索引 返回val
 
-    return result;
+    const { children } = result;
+    return this.getRowByIndex(<RowData_I[]>children.rows, index.slice(1)); // 返回children 的值
   }
 
   /**
-   * 获取下一个可用的Row
+   * 获取下一个可用的row 如果没有返回undefined
    *
    * @author FreMaNgo
-   * @date 2019-08-21
-   * @private
-   * @param {number} offset 偏移量
-   * @param {RowData_I} currentRow 当前的row
+   * @date 2019-08-26
+   * @param {RowData_I[]} rows 根节点rows集合
+   * @param {number[]} [currentIndex=[0]] 当前的row指针
+   * @returns
+   * @memberof Data
+   */
+  getNextRow(rows: RowData_I[], currentIndex: number[] = [0]) {
+    const current = this.getRowByIndex(rows, currentIndex);
+    if (!current) return;
+    const { children } = current;
+    // 找子节点，有就return
+    if (children) {
+      const { rows } = children;
+      if (rows && rows.length) return rows[0];
+    }
+    // 找下一个兄弟节点，有就return
+    const broIndex = currentIndex.slice(0);
+    broIndex[currentIndex.length - 1] += 1;
+    let next = this.getRowByIndex(rows, broIndex);
+    if (next) return next;
+    // 找父节点的下一个兄弟节点，有就return
+    const { parentIndex } = current;
+    if (parentIndex) {
+      const uncleIndex = parentIndex.slice(0);
+      uncleIndex[uncleIndex.length - 1] += 1;
+      const uncle = this.getRowByIndex(rows, uncleIndex);
+      if (uncle) return uncle;
+    }
+    // 都没有，return undefined
+    return;
+  }
+
+  /**
+   * 获取上一个可用的row 如果没有 返回undefined
+   *
+   * @author FreMaNgo
+   * @date 2019-08-26
+   * @param {RowData_I[]} rows 根节点rows集合
+   * @param {number[]} [currentIndex=[0]] 当前的row指针
+   * @returns
+   * @memberof Data
+   */
+  getPrevRow(rows: RowData_I[], currentIndex: number[] = [0]) {
+    const current = this.getRowByIndex(rows, currentIndex);
+    if (!current) return;
+
+    const { length } = currentIndex;
+    // 找兄弟节点的最深一级子节点的最后一个 有就return
+    const broIndex = currentIndex.slice(0);
+
+    broIndex[length - 1] -= 1;
+    if (broIndex[length - 1] >= 0) {
+      const bro = this.getRowByIndex(rows, broIndex);
+      if (bro) {
+        const lastChildren = this.getDeepestChild(bro);
+        if (lastChildren) return lastChildren;
+        // 兄弟节点没有子节点 return 兄弟节点
+        return bro;
+      }
+    }
+    // 没有兄弟节点 返回父节点
+    const { parentIndex } = current;
+    if (parentIndex) {
+      const parent = this.getRowByIndex(rows, parentIndex);
+      if (parent) return parent;
+    }
+
+    return;
+    // 没有父节点 返回undefined
+  }
+
+  /**
+   * 获取行的最深的一个子集的最后一个子行
+   *
+   * @author FreMaNgo
+   * @date 2019-08-26
+   * @param {RowData_I} row 行
    * @returns {RowData_I}
    * @memberof Data
    */
-  private getNextRow(offset: number, currentRow: RowData_I): RowData_I {
-    const index = [].concat(this.index);
-    let nextRow = this.getRowByIndex(index, <RowData_I[]>this.data.items);
-    if (nextRow.hidden) {
-      return this.getNextRow(offset, nextRow);
+  getDeepestChild(row: RowData_I): RowData_I {
+    const lastChild = this.getLastChild(row);
+    if (lastChild) {
+      const { children } = lastChild;
+      if (children) return this.getDeepestChild(lastChild);
+      return lastChild;
     }
+  }
 
-    const currentOffset = nextRow.size - offset;
-    if (currentOffset >= 0) {
-      return this.getNextRow(currentOffset, nextRow);
+  /**
+   * 获取行的最后一个子行
+   *
+   * @author FreMaNgo
+   * @date 2019-08-26
+   * @param {RowData_I} row 行
+   * @returns {RowData_I}
+   * @memberof Data
+   */
+  getLastChild(row: RowData_I): RowData_I {
+    const { children } = row;
+    if (children) {
+      const { rows } = children;
+      if (rows && rows.length) {
+        return <RowData_I>rows[rows.length];
+      }
     }
+  }
 
-    return nextRow;
+  /**
+   * 获取源集合
+   *
+   * @author FreMaNgo
+   * @date 2019-08-23
+   * @returns
+   * @memberof Data
+   */
+  getOrigin() {
+    return this.originData;
+  }
+
+  /**
+   * 获取viewData集合
+   *
+   * @author FreMaNgo
+   * @date 2019-08-23
+   * @returns
+   * @memberof Data
+   */
+  get() {
+    return this.viewData;
   }
 }
 

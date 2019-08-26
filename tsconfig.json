@@ -16,5 +16,15 @@
       "components/*": ["components/*"]
     }
   },
-  "include": ["./src/*", "./src/modules/*", "./src/Plugins/*", "./src/helpers/*", "./src/types/*"]
+  "include": ["./src/*", "./src/modules/*", "./src/Plugins/*", "./src/helpers/*", "./src/types/*"],
+  "exclude": ["node_modules", "test.ts", "benchmark.ts"],
+  "awesomeTypescriptLoaderOptions": {
+    "reportFiles": [
+      "./src/*",
+      "./src/modules/*",
+      "./src/Plugins/*",
+      "./src/helpers/*",
+      "./src/types/*"
+    ]
+  }
 }

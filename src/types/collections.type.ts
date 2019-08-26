@@ -28,7 +28,7 @@ interface CommonItem_I {
   id?: Id_Type; // 主键，唯一
   index?: number; // 在总集合内的索引
   locked: boolean; // 是否锁定
-  pos?: Pos_Type; // 在总视图内的位置信息 [x,y]
+  // pos?: Pos_Type; // 在总视图内的位置信息 [x,y]
   selected: boolean; // 是否选中
   size?: number; // row的height或col的width
 }
@@ -65,28 +65,33 @@ export interface RenderingData_I {
   text?: FinalCollection_I<TextStyle_I, Text>[];
 }
 
+export interface SimpleData_I {
+  [index: number]: number | string | SimpleData_I;
+}
+
 export interface Data_I {
   parentId?: Id_Type;
-  parentIndex?: number;
+  parentIndex?: number[];
   colSize?: number;
   customStyle?: Function;
   deep?: number;
   hidden?: boolean;
-  items?: RowDataArr_Type;
+  rows?: RowDataArr_Type;
   rowSize?: number;
   wrap?: boolean;
 }
 
 export interface RowData_I {
+  parentIndex?: number[];
   children?: Data_I;
   customStyle?: Function;
   hidden?: boolean;
   id?: Id_Type;
   index?: number;
-  items?: CellDataArr_Type;
+  cells?: CellDataArr_Type;
   locked?: boolean;
   merge?: boolean | number;
-  pos?: Pos_Type;
+  // pos?: Pos_Type;
   selected?: boolean;
   size?: number;
   style?: DataStyle_I;
@@ -99,7 +104,7 @@ export interface CellData_I {
   index?: number;
   locked?: boolean;
   merge?: boolean | Pos_Type;
-  pos?: Pos_Type;
+  // pos?: Pos_Type;
   selected?: boolean;
   size?: number;
   style?: DataStyle_I;

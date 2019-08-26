@@ -1,5 +1,5 @@
 import { Font_I } from "types/style.type";
-import { isObject } from "util";
+import { isObject, isArray } from "util";
 
 /**
  * 获取屏幕像素比
@@ -33,11 +33,16 @@ export const deepMerge = <T>(origin: T, target: T): T => {
   const tempObj = Object.assign({}, origin);
 
   for (const key in target) {
-    if (isObject(origin[key]) && target[key]) {
-      tempObj[key] = deepMerge(origin[key], target[key]);
-    } else {
-      tempObj[key] = target[key];
+    const targetVal = target[key];
+    const originVal = origin[key];
+    // if (!targetVal) continue;
+
+    if (isObject(originVal) && targetVal) {
+      tempObj[key] = deepMerge(originVal, targetVal);
+      continue;
     }
+
+    tempObj[key] = target[key];
   }
 
   return tempObj;
