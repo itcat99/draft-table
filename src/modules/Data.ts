@@ -32,10 +32,10 @@
 import {
   Data_I,
   RowData_I,
-  RowDataArr_Type,
   CellDataArr_Type,
   CellData_I,
   SimpleData_I,
+  GlobalIndex_Type,
 } from "types/collections.type";
 import { DATA, ORIGIN_X, CELL_DATA, ORIGIN_Y, ROW_DATA } from "../constants";
 import { isNumber, isString, isArray } from "util";
@@ -50,7 +50,7 @@ interface DataProps_I {
 
 interface ParseOpts_I {
   deep?: number;
-  parentIndex?: number[];
+  parentIndex?: GlobalIndex_Type;
   parentId?: Id_Type;
 }
 
@@ -62,7 +62,7 @@ class Data {
   private originData: Data_I; // 源集合
   private viewData: Data_I; // 视图集合
 
-  private index: number[]; // 当前行的索引
+  private index: GlobalIndex_Type; // 当前行的索引
   private deep: number; // 当前检查的深度
 
   private currentOffsetX: number; // 当前横向偏移量
@@ -75,7 +75,7 @@ class Data {
     this.data = data;
     this.originData = this._parseData(this.data);
     this.viewData = this._parseViewData(this.originData);
-    // this.index = [0];
+    this.index = [0];
   }
 
   /**
@@ -104,7 +104,7 @@ class Data {
     if (parentId) _data.parentId = parentId;
     if (parentIndex) _data.parentIndex = parentIndex;
 
-    _data.rows = <RowData_I[]>this._normailzedRows(_data.rows, deep, parentIndex);
+    _data.rows = this._normailzedRows(_data.rows, deep, parentIndex);
     return _data;
   }
 
@@ -114,12 +114,12 @@ class Data {
    * @author FreMaNgo
    * @date 2019-08-15
    * @private
-   * @param {RowDataArr_Type} rows 传入集合的rows
+   * @param {RowData_I[]} rows 传入集合的rows
    * @param {number} deep 当前集合的深度
    * @returns
    * @memberof Core
    */
-  private _normailzedRows(rows: RowDataArr_Type, deep: number = 0, parentIndex?: number[]) {
+  private _normailzedRows(rows: RowData_I[], deep: number = 0, parentIndex?: GlobalIndex_Type) {
     if (!rows) return [];
     let result: RowData_I[] = [];
 
@@ -129,7 +129,7 @@ class Data {
 
       if (isArray(row)) {
         _row = Object.assign({}, ROW_DATA, {
-          rows: row,
+          cells: row,
         });
       } else {
         _row = deepMerge(ROW_DATA, Object.assign({}, row));
@@ -181,6 +181,7 @@ class Data {
    */
   private _normailzedCells(cells: CellDataArr_Type) {
     let result: CellData_I[] = [];
+    if (!cells) return result;
 
     for (let index = 0; index < cells.length; index++) {
       let cell = cells[index];
@@ -237,7 +238,7 @@ class Data {
 
     const result = Object.assign({}, data);
     const squareOffset = Math.sqrt(offset);
-    const rows = <RowData_I[]>result.rows;
+    const rows = result.rows;
     const handler = offset > 0 ? this.getNextRow.bind(this) : this.getPrevRow.bind(this);
 
     let next = handler(rows, this.index);
@@ -269,7 +270,7 @@ class Data {
    * @memberof Data
    */
   private sliceData(currentRow: RowData_I, rows: RowData_I[] = [], count: number = 0): RowData_I[] {
-    const originRows = [].concat(<RowData_I[]>this.originData.rows);
+    const originRows = [].concat(this.originData.rows);
 
     if (currentRow) {
       const { size, hidden } = currentRow;
@@ -330,7 +331,7 @@ class Data {
     if (typeof nextIndex !== "number") return result; // 如果没有下一个索引 返回val
 
     const { children } = result;
-    return this.getRowByIndex(<RowData_I[]>children.rows, index.slice(1)); // 返回children 的值
+    return this.getRowByIndex(children.rows, index.slice(1)); // 返回children 的值
   }
 
   /**
@@ -349,7 +350,7 @@ class Data {
     const { children } = current;
     // 找子节点，有就return
     if (children) {
-      const rows = <RowData_I[]>children.rows;
+      const rows = children.rows;
       if (rows && rows.length) return rows[0];
     }
     // 找下一个兄弟节点，有就return
@@ -436,7 +437,7 @@ class Data {
     const { parentIndex } = row;
     if (!parentIndex) return;
 
-    const parent = this.getRowByIndex(<RowData_I[]>this.originData.rows, parentIndex);
+    const parent = this.getRowByIndex(this.originData.rows, parentIndex);
     const bro = this.getNextBro(parent);
     if (bro) return bro;
 
@@ -456,7 +457,7 @@ class Data {
     const broIndex = this.getIndexInTotal(row);
     broIndex[broIndex.length - 1] += 1;
 
-    return this.getRowByIndex(<RowData_I[]>this.originData.rows, broIndex);
+    return this.getRowByIndex(this.originData.rows, broIndex);
   }
 
   /**
@@ -472,7 +473,7 @@ class Data {
     const broIndex = this.getIndexInTotal(row);
     broIndex[broIndex.length - 1] -= 1;
 
-    return this.getRowByIndex(<RowData_I[]>this.originData.rows, broIndex);
+    return this.getRowByIndex(this.originData.rows, broIndex);
   }
 
   /**

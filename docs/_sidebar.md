@@ -15,5 +15,6 @@
 - types
   - [介绍](/types/about)
   - [common](/types/common)
+  - [collections](/types/collections)
   - [plugins](/types/plugins)
   - [emitter](/types/emitter)

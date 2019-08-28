@@ -5,14 +5,7 @@ import Plugin from "./Plugin";
 import Err from "./Err";
 
 import DEFAULT_PROPS from "../config";
-import {
-  INTERNAL_PLUGIN_NAMESPACES,
-  ROW_DATA,
-  DATA,
-  ORIGIN_X,
-  ORIGIN_Y,
-  CELL_DATA,
-} from "../constants";
+import { INTERNAL_PLUGIN_NAMESPACES } from "../constants";
 
 /* internal Plugins */
 import Canvas from "plugins/Canvas";
@@ -22,23 +15,13 @@ import Scrollbar from "plugins/Scrollbar";
 import { Config_I, Id_Type } from "types/common.type";
 import { LineStyle_I, RectStyle_I, TextStyle_I } from "types/style.type";
 import { RegisterOptions_I, PluginCollection_I } from "types/plugins.type";
-import {
-  CellData_I,
-  CellDataArr_Type,
-  Data_I,
-  FinalCollection_I,
-  RenderingData_I,
-  RowData_I,
-  RowDataArr_Type,
-} from "types/collections.type";
+import { Data_I, FinalCollection_I, RenderingData_I } from "types/collections.type";
 import { Callback_I } from "types/emitter.type";
 import { deepMerge, generatorFont } from "helpers";
 
 import Line from "components/Line";
 import Rect from "components/Rect";
 import Text from "components/Text";
-import { isArray, isNumber, isString } from "util";
-import { BarType_Enum } from "types/plugins/scrollbar.type";
 
 class Core {
   public COLLECTIONS: any;

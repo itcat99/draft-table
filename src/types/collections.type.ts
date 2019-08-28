@@ -11,8 +11,8 @@ export enum CellType_Enum {
 }
 
 type CellValue_Type = Plugin | string | undefined | null | number; // 插件实例或字符串
-export type RowDataArr_Type = string[][] | number[][] | Array<RowData_I>;
 export type CellDataArr_Type = string[] | number[] | Array<CellData_I>;
+export type GlobalIndex_Type = number[];
 
 // interface customStyle_I<T, M> {
 //   (collection: T, data?: Data_I<M>): {
@@ -26,7 +26,7 @@ interface CommonItem_I {
   [key: string]: any;
   hidden: boolean; // 是否隐藏
   id?: Id_Type; // 主键，唯一
-  index?: number; // 在总集合内的索引
+  index?: number; // 在当前集合内的索引
   locked: boolean; // 是否锁定
   // pos?: Pos_Type; // 在总视图内的位置信息 [x,y]
   selected: boolean; // 是否选中
@@ -71,18 +71,18 @@ export interface SimpleData_I {
 
 export interface Data_I {
   parentId?: Id_Type;
-  parentIndex?: number[];
+  parentIndex?: GlobalIndex_Type;
   colSize?: number;
   customStyle?: Function;
   deep?: number;
   hidden?: boolean;
-  rows?: RowDataArr_Type;
+  rows?: RowData_I[];
   rowSize?: number;
   wrap?: boolean;
 }
 
 export interface RowData_I {
-  parentIndex?: number[];
+  parentIndex?: GlobalIndex_Type;
   children?: Data_I;
   customStyle?: Function;
   hidden?: boolean;
