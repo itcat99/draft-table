@@ -49,7 +49,7 @@ interface DataProps_I {
 }
 
 interface ParseOpts_I {
-  deep: number;
+  deep?: number;
   parentIndex?: number[];
   parentId?: Id_Type;
 }
@@ -69,10 +69,13 @@ class Data {
   private currentOffsetY: number; // 当前纵向偏移量
 
   constructor(public props: DataProps_I) {
-    this.data = this.props.data;
+    const { data, width, height } = this.props;
+    this.width = width;
+    this.height = height;
+    this.data = data;
     this.originData = this._parseData(this.data);
     this.viewData = this._parseViewData(this.originData);
-    this.index = [0];
+    // this.index = [0];
   }
 
   /**
@@ -101,7 +104,7 @@ class Data {
     if (parentId) _data.parentId = parentId;
     if (parentIndex) _data.parentIndex = parentIndex;
 
-    _data.rows = <RowData_I[]>this._normailzedRows(_data.rows, deep);
+    _data.rows = <RowData_I[]>this._normailzedRows(_data.rows, deep, parentIndex);
     return _data;
   }
 
@@ -116,7 +119,7 @@ class Data {
    * @returns
    * @memberof Core
    */
-  private _normailzedRows(rows: RowDataArr_Type, deep: number = 0, index: number[] = this.index) {
+  private _normailzedRows(rows: RowDataArr_Type, deep: number = 0, parentIndex?: number[]) {
     if (!rows) return [];
     let result: RowData_I[] = [];
 
@@ -140,14 +143,22 @@ class Data {
 
       _row.cells = <CellData_I[]>this._normailzedCells(cells);
 
+      if (parentIndex) _row.parentIndex = parentIndex;
       if (children) {
-        const parentIndex = [].concat(index);
-        parentIndex[deep] = _row.index;
+        let { index } = _row;
+        let childParentIndex: number[];
+
+        if (parentIndex) {
+          childParentIndex = [].concat(parentIndex);
+          childParentIndex[deep] = index;
+        } else {
+          childParentIndex = [index];
+        }
 
         _row.children = this._parseData(children, {
           deep: deep + 1,
           parentId: _row.id,
-          parentIndex: parentIndex,
+          parentIndex: childParentIndex,
         });
       }
 
@@ -198,16 +209,99 @@ class Data {
   /**
    * 计算当前视图集合
    *
+   *  根据当前的index和视图宽高计算视图内的数据
+   *
+   *  获取下一个或上一个的的index
+   *  从index开始计算size的叠加 直到大于height
+   *
+   *  排除：
+   *  1. hidden的row
+   *  2. hidden的col
+   *  3. hidden的折叠table
+   *
    * @author FreMaNgo
-   * @date 2019-08-20
+   * @date 2019-08-27
    * @private
-   * @param {number} offset 偏移量
-   * @param {boolean} [v=true] 视图方向，默认纵向
+   * @param {Data_I} data
+   * @param {number} [offset=0]
    * @memberof Data
    */
-  private _parseViewData(data: Data_I, offset: number = 0, v: boolean = true) {
-    const viewData: Data_I = {};
-    return viewData;
+  private _parseViewData(data: Data_I, offset: number = 0, count: number = 0): Data_I {
+    if (typeof offset === "number" && !offset) {
+      if (this.viewData) return this.viewData;
+      this.index = [0];
+      const result = Object.assign({}, data);
+      result.rows = this.sliceData(<RowData_I>result.rows[0]);
+      return result;
+    }
+
+    const result = Object.assign({}, data);
+    const squareOffset = Math.sqrt(offset);
+    const rows = <RowData_I[]>result.rows;
+    const handler = offset > 0 ? this.getNextRow.bind(this) : this.getPrevRow.bind(this);
+
+    let next = handler(rows, this.index);
+    if (!next) return this.viewData;
+
+    const { size } = next;
+    this.index = this.getIndexInTotal(next);
+
+    const currentSize = count + size;
+    if (currentSize >= squareOffset) {
+      result.rows = this.sliceData(next);
+      return result;
+    } else {
+      return this._parseViewData(result, offset, currentSize);
+    }
+  }
+
+  /**
+   * 根据当前的行和视图高度
+   * 切片数据
+   *
+   * @author FreMaNgo
+   * @date 2019-08-28
+   * @private
+   * @param {RowData_I} currentRow 当前行
+   * @param {RowData_I[]} [rows=[]] 源数据行信息
+   * @param {number} [count=0] 当前累加的高度
+   * @returns {RowData_I[]}
+   * @memberof Data
+   */
+  private sliceData(currentRow: RowData_I, rows: RowData_I[] = [], count: number = 0): RowData_I[] {
+    const originRows = [].concat(<RowData_I[]>this.originData.rows);
+
+    if (currentRow) {
+      const { size, hidden } = currentRow;
+      const currentSize = count + size;
+
+      if (currentSize >= this.height) {
+        return rows;
+      } else {
+        !hidden && rows.push(currentRow);
+        const next = this.getNextRow(originRows, this.getIndexInTotal(currentRow));
+
+        if (!next) return rows;
+        return this.sliceData(next, rows, currentSize);
+      }
+    }
+
+    return rows;
+  }
+
+  /**
+   * 获取当前行在总数据源中的索引位置
+   *
+   * @author FreMaNgo
+   * @date 2019-08-27
+   * @param {RowData_I} row
+   * @memberof Data
+   */
+  getIndexInTotal(row: RowData_I) {
+    const { index, parentIndex } = row;
+
+    if (parentIndex) return [].concat(parentIndex, [index]);
+    return [index];
   }
 
   /**
@@ -249,13 +343,13 @@ class Data {
    * @returns
    * @memberof Data
    */
-  getNextRow(rows: RowData_I[], currentIndex: number[] = [0]) {
+  getNextRow(rows: RowData_I[], currentIndex: number[] = [0]): RowData_I {
     const current = this.getRowByIndex(rows, currentIndex);
     if (!current) return;
     const { children } = current;
     // 找子节点，有就return
     if (children) {
-      const { rows } = children;
+      const rows = <RowData_I[]>children.rows;
       if (rows && rows.length) return rows[0];
     }
     // 找下一个兄弟节点，有就return
@@ -264,13 +358,9 @@ class Data {
     let next = this.getRowByIndex(rows, broIndex);
     if (next) return next;
     // 找父节点的下一个兄弟节点，有就return
-    const { parentIndex } = current;
-    if (parentIndex) {
-      const uncleIndex = parentIndex.slice(0);
-      uncleIndex[uncleIndex.length - 1] += 1;
-      const uncle = this.getRowByIndex(rows, uncleIndex);
-      if (uncle) return uncle;
-    }
+    // 没有就向上找 直到找到 就return
+    const parentBro = this.getDeepestParentBro(current);
+    if (parentBro) return parentBro;
     // 都没有，return undefined
     return;
   }
@@ -285,7 +375,7 @@ class Data {
    * @returns
    * @memberof Data
    */
-  getPrevRow(rows: RowData_I[], currentIndex: number[] = [0]) {
+  getPrevRow(rows: RowData_I[], currentIndex: number[] = [0]): RowData_I {
     const current = this.getRowByIndex(rows, currentIndex);
     if (!current) return;
 
@@ -330,6 +420,59 @@ class Data {
       if (children) return this.getDeepestChild(lastChild);
       return lastChild;
     }
+  }
+
+  /**
+   * 深度遍历 获取父级的兄弟节点
+   * 如果父级没有 就再往上找
+   *
+   * @author FreMaNgo
+   * @date 2019-08-28
+   * @param {RowData_I} row
+   * @returns {RowData_I}
+   * @memberof Data
+   */
+  getDeepestParentBro(row: RowData_I): RowData_I {
+    const { parentIndex } = row;
+    if (!parentIndex) return;
+
+    const parent = this.getRowByIndex(<RowData_I[]>this.originData.rows, parentIndex);
+    const bro = this.getNextBro(parent);
+    if (bro) return bro;
+
+    return this.getDeepestParentBro(parent);
+  }
+
+  /**
+   * 获取下一个兄弟节点
+   *
+   * @author FreMaNgo
+   * @date 2019-08-28
+   * @param {RowData_I} row
+   * @returns {RowData_I}
+   * @memberof Data
+   */
+  getNextBro(row: RowData_I): RowData_I {
+    const broIndex = this.getIndexInTotal(row);
+    broIndex[broIndex.length - 1] += 1;
+
+    return this.getRowByIndex(<RowData_I[]>this.originData.rows, broIndex);
+  }
+
+  /**
+   * 获取上一个兄弟节点
+   *
+   * @author FreMaNgo
+   * @date 2019-08-28
+   * @param {RowData_I} row
+   * @returns {RowData_I}
+   * @memberof Data
+   */
+  getPrevBro(row: RowData_I): RowData_I {
+    const broIndex = this.getIndexInTotal(row);
+    broIndex[broIndex.length - 1] -= 1;
+
+    return this.getRowByIndex(<RowData_I[]>this.originData.rows, broIndex);
   }
 
   /**
