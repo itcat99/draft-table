@@ -1,13 +1,13 @@
 - 入门
   - [介绍](/)
 - 模块
-  - [Core - 核心](/modules/core)
-  - [Plugins - 插件池](/modules/plugins)
-  - [Plugin - 插件](/modules/plugin)
-  - [Emitter - 事件池](/modules/emitter)
-  - [Collections - 集合](/modules/collections)
-  - [Store - 数据池](/modules/store)
-  - [Err - 错误处理](/modules/err)
+  - [Core - 核心](/modules/Core)
+  - [Plugins - 插件池](/modules/Plugins)
+  - [Plugin - 插件](/modules/Plugin)
+  - [Emitter - 事件池](/modules/Emitter)
+  - [Collections - 集合](/modules/Collections)
+  - [Store - 数据池](/modules/Store)
+  - [Err - 错误处理](/modules/Rrr)
 - [配置](/config/index)
 - 内置插件
   - [canvas](/insidePlugins/canvas)
