@@ -37,15 +37,17 @@ import {
   SimpleData_I,
   GlobalIndex_Type,
 } from "types/collections.type";
-import { DATA, ORIGIN_X, CELL_DATA, ORIGIN_Y, ROW_DATA } from "../constants";
+import { DATA, CELL_DATA, ROW_DATA } from "../constants";
 import { isNumber, isString, isArray } from "util";
 import { deepMerge } from "helpers";
 import { Id_Type } from "types/common.type";
+import Emitter from "./Emitter";
 
 interface DataProps_I {
   data: Data_I | SimpleData_I; // 接受Data类型或者多维数组
   width: number;
   height: number;
+  emitter: Emitter;
 }
 
 interface ParseOpts_I {
@@ -68,14 +70,18 @@ class Data {
   private currentOffsetX: number; // 当前横向偏移量
   private currentOffsetY: number; // 当前纵向偏移量
 
+  private emitter: Emitter;
+
   constructor(public props: DataProps_I) {
-    const { data, width, height } = this.props;
+    const { data, width, height, emitter } = this.props;
+
+    this.emitter = emitter;
     this.width = width;
     this.height = height;
     this.data = data;
     this.originData = this._parseData(this.data);
     this.viewData = this._parseViewData(this.originData);
-    this.index = [0];
+    // this.index = [0];
   }
 
   /**
@@ -228,21 +234,24 @@ class Data {
    * @memberof Data
    */
   private _parseViewData(data: Data_I, offset: number = 0, count: number = 0): Data_I {
-    if (typeof offset === "number" && !offset) {
-      if (this.viewData) return this.viewData;
+    if (!this.index) {
       this.index = [0];
       const result = Object.assign({}, data);
       result.rows = this.sliceData(<RowData_I>result.rows[0]);
+
+      this.emitter.fire("viewDataChange", [result], "_DATA_");
       return result;
     }
 
     const result = Object.assign({}, data);
     const squareOffset = Math.sqrt(offset);
     const rows = result.rows;
-    const handler = offset > 0 ? this.getNextRow.bind(this) : this.getPrevRow.bind(this);
+    const handler = offset >= 0 ? this.getNextRow.bind(this) : this.getPrevRow.bind(this);
 
     let next = handler(rows, this.index);
-    if (!next) return this.viewData;
+    if (!next) {
+      return this.viewData;
+    }
 
     const { size } = next;
     this.index = this.getIndexInTotal(next);
@@ -250,6 +259,8 @@ class Data {
     const currentSize = count + size;
     if (currentSize >= squareOffset) {
       result.rows = this.sliceData(next);
+
+      this.emitter.fire("viewDataChange", [result], "_DATA_");
       return result;
     } else {
       return this._parseViewData(result, offset, currentSize);
@@ -274,16 +285,19 @@ class Data {
 
     if (currentRow) {
       const { size, hidden } = currentRow;
-      const currentSize = count + size;
 
-      if (currentSize >= this.height) {
-        return rows;
-      } else {
-        !hidden && rows.push(currentRow);
-        const next = this.getNextRow(originRows, this.getIndexInTotal(currentRow));
+      if (!hidden) {
+        const currentSize = count + size;
+        rows.push(currentRow);
 
-        if (!next) return rows;
-        return this.sliceData(next, rows, currentSize);
+        if (currentSize >= this.height) {
+          return rows;
+        } else {
+          const next = this.getNextRow(originRows, this.getIndexInTotal(currentRow));
+          if (!next) return rows;
+
+          return this.sliceData(next, rows, currentSize);
+        }
       }
     }
 
@@ -517,6 +531,14 @@ class Data {
    */
   get() {
     return this.viewData;
+  }
+
+  setSize({ width, height }: { width: number; height: number }) {
+    this.width = width || this.width;
+    this.height = height || this.height;
+
+    this.viewData.rows = this.sliceData(this.getRowByIndex(this.originData.rows, this.index));
+    this.emitter.fire("viewDataChange", [this.viewData], "_DATA_");
   }
 }
 

@@ -9,7 +9,7 @@
   "private": false,
   "scripts": {
     "dev": "webpack-dev-server --config webpack.dev.js",
-    "build": "webpack --config webpack.prod.js",
+    "build": "tsc",
     "doc": "docsify serve ./docs -p 3001",
     "test:collection": "jest test/modules/collection/*"
   },
@@ -37,5 +37,8 @@
     "webpack": "^4.36.1",
     "webpack-cli": "^3.3.6",
     "webpack-dev-server": "^3.7.2"
+  },
+  "dependencies": {
+    "ts-polyfill": "^3.5.3"
   }
 }

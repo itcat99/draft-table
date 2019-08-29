@@ -1,4 +1,5 @@
 import Data from "./src/modules/Data";
+import Emitter from "./src/modules/Emitter";
 
 const a = {
   rows: [
@@ -23,7 +24,7 @@ const a = {
 
 const b = [[1, 2, 3], [4, 5, 6]];
 
-const data = new Data({ data: b, width: 400, height: 300 });
+const data = new Data({ data: b, width: 400, height: 300, emitter: new Emitter() });
 console.log("origin data: ", data.getOrigin());
 console.log("view data: ", data.get());
 

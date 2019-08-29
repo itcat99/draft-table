@@ -11,8 +11,8 @@ const output = path.join(root, "dist");
 const components = path.join(src, "components");
 
 // const entry = path.join(src, "index.ts");
-// const entry = path.join(root, "examples", "index.js");
-const entry = path.resolve(__dirname, "test.ts");
+const entry = path.join(root, "examples", "index.js");
+// const entry = path.resolve(__dirname, "test.ts");
 
 module.exports = {
   entry,

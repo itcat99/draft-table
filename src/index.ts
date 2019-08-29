@@ -1,3 +1,5 @@
+// import "ts-polyfill";
+
 import Core from "modules/Core";
 
 import _Plugin from "modules/Plugin";
