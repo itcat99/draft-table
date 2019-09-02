@@ -223,7 +223,56 @@ class Core {
   lockedRow(key: Id_Type) {}
   lockedCol(key: Id_Type) {}
   // 插入
-  insertRow(key: Id_Type, data: any) {}
+  /**
+   * @description 实现对往表格的位置插入行
+   * @param key 用于定位的行的key标识
+   * @param data 需要被插入的行的信息
+   *  逻辑思路书写：
+   *    根据key找到位置—-> key 可能是 显示 或 不显示； 可能是父，可能是子；
+   *    将数据添加到其后
+   *        --->  可能插入一行，可能插入一组；
+   *        --->  插入数据后，需要行程配套的层级结构
+   *
+   * @consider :
+   *  需要考虑支持多行插入的情况
+   *  插入数据之后，如何告知变动
+   *
+   * @remind ：
+   *    思路1  直接在原始集合上操作
+   *          rows.splice()
+   *    思路2[未尝试]  在一个新的数组上操作，替换rows
+   *        rows && rows.findIndex()
+   */
+  // todo (1)缺失测试（2）缺失数据变动后的告知（3）缺失移出相关的说明性质注释
+  insertRow(key: Id_Type, data: RowData_I | Array<RowData_I>): void {
+    const originData = this.data;
+    let rows = originData.items || [];
+
+    const insertRowBykey: Function = (
+      rows: Array<RowData_I>,
+      key: Id_Type,
+      data: RowData_I | Array<RowData_I>,
+    ) => {
+      const insertData = isArray(data) ? data : [data];
+      rows &&
+        rows.forEach((row: any, index: number) => {
+          const rowChildren = row.children;
+          const isExistChild = rowChildren && isArray(rowChildren);
+          if (isExistChild) {
+            insertRowBykey(rowChildren, key, insertData);
+          } else {
+            const rowKey = row.id || "";
+            if (rowKey === key) {
+              rows.splice(index, 0, ...insertData);
+            }
+          }
+        });
+    };
+    // 第一步，根据key获取到行所在的位置;
+    // 第二步，统一要插入的数据，在固定位置上加入；
+    insertRowBykey(rows, key, data);
+    // 第三步，[未实现]触发this.data 的更新（emitter); ==> 调用store 更新数据
+  }
   insertCol(key: Id_Type, data: any) {}
   // 删除
   delRow(key: Id_Type) {}
