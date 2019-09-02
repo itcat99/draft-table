@@ -244,35 +244,36 @@ class Core {
    *        rows && rows.findIndex()
    */
   // todo (1)缺失测试（2）缺失数据变动后的告知（3）缺失移出相关的说明性质注释
-  insertRow(key: Id_Type, data: RowData_I | Array<RowData_I>): void {
-    const originData = this.data;
-    let rows = originData.items || [];
+  //todo 暂时注释掉关于插入方法的实现络，原因：数据结构存在变动，故策略也需要调整
+  // insertRow(key: Id_Type, data: RowData_I | Array<RowData_I>): void {
+  //   const originData = this.data;
+  //   let rows = originData.items || [];
 
-    const insertRowBykey: Function = (
-      rows: Array<RowData_I>,
-      key: Id_Type,
-      data: RowData_I | Array<RowData_I>,
-    ) => {
-      const insertData = isArray(data) ? data : [data];
-      rows &&
-        rows.forEach((row: any, index: number) => {
-          const rowChildren = row.children;
-          const isExistChild = rowChildren && isArray(rowChildren);
-          if (isExistChild) {
-            insertRowBykey(rowChildren, key, insertData);
-          } else {
-            const rowKey = row.id || "";
-            if (rowKey === key) {
-              rows.splice(index, 0, ...insertData);
-            }
-          }
-        });
-    };
-    // 第一步，根据key获取到行所在的位置;
-    // 第二步，统一要插入的数据，在固定位置上加入；
-    insertRowBykey(rows, key, data);
-    // 第三步，[未实现]触发this.data 的更新（emitter); ==> 调用store 更新数据
-  }
+  //   const insertRowBykey: Function = (
+  //     rows: Array<RowData_I>,
+  //     key: Id_Type,
+  //     data: RowData_I | Array<RowData_I>,
+  //   ) => {
+  //     const insertData = isArray(data) ? data : [data];
+  //     rows &&
+  //       rows.forEach((row: any, index: number) => {
+  //         const rowChildren = row.children;
+  //         const isExistChild = rowChildren && isArray(rowChildren);
+  //         if (isExistChild) {
+  //           insertRowBykey(rowChildren, key, insertData);
+  //         } else {
+  //           const rowKey = row.id || "";
+  //           if (rowKey === key) {
+  //             rows.splice(index, 0, ...insertData);
+  //           }
+  //         }
+  //       });
+  //   };
+  //   // 第一步，根据key获取到行所在的位置;
+  //   // 第二步，统一要插入的数据，在固定位置上加入；
+  //   insertRowBykey(rows, key, data);
+  //   // 第三步，[未实现]触发this.data 的更新（emitter); ==> 调用store 更新数据
+  // }
   insertCol(key: Id_Type, data: any) {}
   // 删除
   delRow(key: Id_Type) {}
