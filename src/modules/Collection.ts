@@ -3,20 +3,31 @@
  * 主要的集合存储目标，数组 和 map
  */
 
-import { isObject } from "util";
+import { isObject, isArray, isNumber } from "util";
 class Collection {
   private items: Array<any> | Object;
-  constructor(collect: any) {
-    if (collect !== undefined || !Array.isArray(collect) || !isObject(collect)) {
-      this.items = [collect];
+  constructor(collection: any) {
+    if (
+      collection === undefined ||
+      collection === null ||
+      (isNumber(collection) && isNaN(collection))
+    ) {
+      this.items = [];
+    } else if (isArray(collection) || isObject(collection)) {
+      //isObject(null)=====>false
+      this.items = collection;
     } else {
-      this.items = collect;
+      this.items = [collection];
     }
   }
-  search() {
 
+  getItems() {
+    return this.items;
   }
-}
-const collection = (collection: any) => new Collection(collection);
 
-export default {collection};
+  forEach() {}
+  search() {}
+  add() {}
+  delete() {}
+}
+export const collection = (collection: any) => new Collection(collection);
