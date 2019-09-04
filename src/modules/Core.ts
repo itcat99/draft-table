@@ -24,8 +24,6 @@ import Line from "components/Line";
 import Rect from "components/Rect";
 import Text from "components/Text";
 import { Line_I } from "types/plugins/canvas.types";
-import { listenerCount } from "cluster";
-import { format } from "url";
 
 class Core {
   public COLLECTIONS: any;
