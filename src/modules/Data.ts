@@ -235,7 +235,7 @@ class Data {
    * @param {number} [offset=0]
    * @memberof Data
    */
-  private _parseViewData(data: Data_I, offset: number = -19, count?: number): Data_I {
+  private _parseViewData(data: Data_I, offset: number = 0, count?: number): Data_I {
     if (!this.index) this.index = [1];
     const result = Object.assign({}, data);
     const { rows, offsetWithViewY } = result;
