@@ -23,6 +23,9 @@ import { deepMerge, generatorFont } from "helpers";
 import Line from "components/Line";
 import Rect from "components/Rect";
 import Text from "components/Text";
+import { Line_I } from "types/plugins/canvas.types";
+import { listenerCount } from "cluster";
+import { format } from "url";
 
 class Core {
   public COLLECTIONS: any;
@@ -497,19 +500,53 @@ class Core {
    * @memberof Core
    */
   private _filterRenderingData(data: Data_I): RenderingData_I {
+    // todo 关于外层定义了，wrap为true，当齐换行的逻辑为true时的影响
+    const { hidden, wrap } = data;
+    if (hidden) {
+      // 当viewdata中的最外层hidden为true时，直接返回空的渲染集合
+      return {};
+    }
+    const line = this.getLine(data);
+    console.info(line, "line");
+    return { line };
+  }
+
+  private getLine(data: Data_I): any {
     const { rows } = data;
-    let heightCount = 0;
+    let result: Line_I[] = [];
+    rows &&
+      rows.forEach((row, index) => {
+        const { hidden, wrap, size, cells } = row;
+        const startLinePoint = this.getStartLinePoint(index, size, wrap);
+        // const cellSizeArray: number[] = cells && cells.map();
 
-    rows.forEach((row, rowIndex) => {
-      const { size: height } = row;
-      const cells = <CellData_I[]>row.cells;
-
-      cells.forEach((cell, cellIndex) => {
-        const { size: width } = cell;
-        const cellPos = [width * cellIndex, height * rowIndex];
+        cells &&
+          cells.forEach((cell: any) => {
+            const { size } = cell;
+            const point = this.getEndLinePoint(startLinePoint, size);
+            result.push(point);
+          });
       });
-    });
-    return {};
+    return result;
+  }
+
+  private getEndLinePoint(startLinePoint: Line_I, size: number): Line_I {
+    const result = startLinePoint;
+    const { from, to } = result;
+    const [fromX, fromY] = from;
+    to[0] = fromX + size;
+    to[1] = fromY;
+    return result;
+  }
+
+  private getStartLinePoint(rowIndex: number, rowSize: number, wrap: boolean): Line_I {
+    let line: Line_I = { from: [0, 0], to: [0, 0] };
+    if (!wrap) {
+      //todo 【需要考虑】 关于自动换行后，高度变动的量的获取 和 自动换行的依据（根据数据标识？ 还是根据文字长度来判断）
+    } else {
+      line.from[0] = rowIndex * rowSize;
+    }
+    return line;
   }
 
   private _registerPlugins() {
