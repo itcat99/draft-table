@@ -14,6 +14,8 @@ interface Data_I {
   customStyle?: Function;
   deep?: number;
   hidden?: boolean;
+  offsetWithViewX?: number;
+  offsetWithViewY?: number;
   parentId?: Id_Type;
   parentIndex?: GlobalIndex_Type;
   rows?: RowDataArr_Type;
@@ -24,17 +26,19 @@ interface Data_I {
 
 ### 详细定义
 
-| name        | type             | default | optional | desc                                           |
-| ----------- | ---------------- | ------- | -------- | ---------------------------------------------- |
-| colSize     | number           | 100     | Y        | 当前表格的全局列宽，单位 px                    |
-| customStyle | Function         | -       | Y        | 自定义当前表格的全局的行样式回调函数           |
-| deep        | number           | 0       | Y        | 层级深度                                       |
-| hidden      | boolean          | false   | Y        | 是否隐藏所有行数据                             |
-| parentId    | Id_Type          | -       | Y        | 父级行的 Id                                    |
-| parentIndex | GlobalIndex_Type | -       | Y        | 父级在全局的索引，如果没有此项，则视为`根表格` |
-| rows        | RowData_I[]      | []      | Y        | 行集合                                         |
-| rowSize     | number           | 20      | Y        | 当前表格的全局行高，单位 px                    |
-| wrap        | boolean          | false   | Y        | 当前表格的全局格子内文字是否折行               |
+| name            | type             | default | optional | desc                                           |
+| --------------- | ---------------- | ------- | -------- | ---------------------------------------------- |
+| colSize         | number           | 100     | Y        | 当前表格的全局列宽，单位 px                    |
+| customStyle     | Function         | -       | Y        | 自定义当前表格的全局的行样式回调函数           |
+| deep            | number           | 0       | Y        | 层级深度                                       |
+| hidden          | boolean          | false   | Y        | 是否隐藏所有行数据                             |
+| offsetWithViewY | number           | 0       | Y        | 首行相对视图区域的纵向偏移量                   |
+| offsetWithViewX | number           | 0       | Y        | 首个格子相对视图区域的横向偏移量               |
+| parentId        | Id_Type          | -       | Y        | 父级行的 Id                                    |
+| parentIndex     | GlobalIndex_Type | -       | Y        | 父级在全局的索引，如果没有此项，则视为`根表格` |
+| rows            | RowData_I[]      | []      | Y        | 行集合                                         |
+| rowSize         | number           | 20      | Y        | 当前表格的全局行高，单位 px                    |
+| wrap            | boolean          | false   | Y        | 当前表格的全局格子内文字是否折行               |
 
 ## SimpleData_I
 

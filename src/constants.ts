@@ -9,6 +9,8 @@ export const DATA: Data_I = {
   wrap: false,
   rowSize: 20,
   colSize: 80,
+  offsetWithViewX: 0,
+  offsetWithViewY: 0,
 };
 
 export const ROW_DATA: RowData_I = {

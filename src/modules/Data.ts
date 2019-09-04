@@ -38,7 +38,7 @@ import {
   GlobalIndex_Type,
 } from "types/collections.type";
 import { DATA, CELL_DATA, ROW_DATA } from "../constants";
-import { isNumber, isString, isArray } from "util";
+import { isNumber, isString, isArray, isUndefined } from "util";
 import { deepMerge } from "helpers";
 import { Id_Type } from "types/common.type";
 import Emitter from "./Emitter";
@@ -75,6 +75,8 @@ class Data {
   constructor(public props: DataProps_I) {
     const { data, width, height, emitter } = this.props;
 
+    this.currentOffsetY = 0;
+    this.currentOffsetX = 0;
     this.emitter = emitter;
     this.width = width;
     this.height = height;
@@ -233,38 +235,45 @@ class Data {
    * @param {number} [offset=0]
    * @memberof Data
    */
-  private _parseViewData(data: Data_I, offset: number = 0, count: number = 0): Data_I {
-    if (!this.index) {
-      this.index = [0];
-      const result = Object.assign({}, data);
-      result.rows = this.sliceData(<RowData_I>result.rows[0]);
+  private _parseViewData(data: Data_I, offset: number = 0, count?: number): Data_I {
+    if (!this.index) this.index = [1];
+    const result = Object.assign({}, data);
+    const { rows, offsetWithViewY } = result;
 
-      this.emitter.fire("viewDataChange", [result], "_DATA_");
-      return result;
+    const current = this.getRowByIndex(rows, this.index);
+
+    // 正向偏移时， 当偏移量小于当前size + 视图纵向偏移 返回当前Data
+    if (offset > 0 && offset < current.size + offsetWithViewY) return result;
+    // 反向偏移时， 当偏移量大于等于当前视图纵向偏移 返回当前Data
+    if (offset < 0 && offset >= offsetWithViewY) return result;
+
+    if (isUndefined(count)) {
+      count =
+        Math.abs(offset) + (offset >= 0 ? Math.abs(offsetWithViewY) : -Math.abs(offsetWithViewY));
     }
 
-    const result = Object.assign({}, data);
-    const squareOffset = Math.sqrt(offset);
-    const rows = result.rows;
     const handler = offset >= 0 ? this.getNextRow.bind(this) : this.getPrevRow.bind(this);
 
     let next = handler(rows, this.index);
     if (!next) {
-      return this.viewData;
+      // 没有下一个就返回当前的
+      return result;
     }
 
     const { size } = next;
     this.index = this.getIndexInTotal(next);
 
-    const currentSize = count + size;
-    if (currentSize >= squareOffset) {
-      result.rows = this.sliceData(next);
-
-      this.emitter.fire("viewDataChange", [result], "_DATA_");
-      return result;
+    if (size > count) {
+      result.offsetWithViewY = offset >= 0 ? -count : count - size;
+    } else if (size === count) {
+      result.offsetWithViewY = 0;
     } else {
-      return this._parseViewData(result, offset, currentSize);
+      return this._parseViewData(result, offset, count - current.size);
     }
+
+    result.rows = this.sliceRow(current, result.offsetWithViewY);
+    this.emitter.fire("viewDataChange", [result], "_DATA_");
+    return result;
   }
 
   /**
@@ -280,9 +289,13 @@ class Data {
    * @returns {RowData_I[]}
    * @memberof Data
    */
-  private sliceData(currentRow: RowData_I, rows: RowData_I[] = [], count: number = 0): RowData_I[] {
+  private sliceRow(
+    currentRow: RowData_I,
+    offsetWithViewY: number = 0,
+    rows: RowData_I[] = [],
+    count: number = 0,
+  ): RowData_I[] {
     const originRows = [].concat(this.originData.rows);
-
     if (currentRow) {
       const { size, hidden } = currentRow;
 
@@ -290,18 +303,53 @@ class Data {
         const currentSize = count + size;
         rows.push(currentRow);
 
-        if (currentSize >= this.height) {
-          return rows;
-        } else {
+        if (currentSize + offsetWithViewY < this.height) {
           const next = this.getNextRow(originRows, this.getIndexInTotal(currentRow));
           if (!next) return rows;
 
-          return this.sliceData(next, rows, currentSize);
+          return this.sliceCell(this.sliceRow(next, offsetWithViewY, rows, currentSize));
         }
       }
     }
 
     return rows;
+  }
+
+  /**
+   * 根据视图宽度 过滤cell
+   *
+   * @author FreMaNgo
+   * @date 2019-08-30
+   * @param {RowData_I[]} rows
+   * @returns {RowData_I[]}
+   * @memberof Data
+   */
+  sliceCell(rows: RowData_I[]): RowData_I[] {
+    if (!rows || !rows.length) return rows;
+
+    const { cells } = rows[0];
+    let count = 0,
+      start = undefined;
+
+    for (let index = 0; index < cells.length; index++) {
+      const { size } = <CellData_I>cells[index];
+      count += size;
+
+      if (count > this.currentOffsetX && isUndefined(start)) {
+        start = index;
+      }
+
+      if (count - this.currentOffsetX >= this.width) {
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          const { cells } = row;
+
+          row.cells = cells.slice(start, index + 1);
+        }
+
+        return rows;
+      }
+    }
   }
 
   /**
@@ -533,11 +581,22 @@ class Data {
     return this.viewData;
   }
 
+  /**
+   * 设置视图窗口大小 并更新viewData
+   *
+   * @author FreMaNgo
+   * @date 2019-08-30
+   * @param {{ width: number; height: number }} { width, height }
+   * @memberof Data
+   */
   setSize({ width, height }: { width: number; height: number }) {
     this.width = width || this.width;
     this.height = height || this.height;
 
-    this.viewData.rows = this.sliceData(this.getRowByIndex(this.originData.rows, this.index));
+    const { offsetWithViewY } = this.viewData;
+    this.viewData.rows = this.sliceCell(
+      this.sliceRow(this.getRowByIndex(this.originData.rows, this.index), offsetWithViewY),
+    );
     this.emitter.fire("viewDataChange", [this.viewData], "_DATA_");
   }
 }

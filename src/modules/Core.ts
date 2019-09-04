@@ -16,7 +16,7 @@ import Scrollbar from "plugins/Scrollbar";
 import { Config_I, Id_Type } from "types/common.type";
 import { LineStyle_I, RectStyle_I, TextStyle_I } from "types/style.type";
 import { RegisterOptions_I, PluginCollection_I } from "types/plugins.type";
-import { Data_I, FinalCollection_I, RenderingData_I } from "types/collections.type";
+import { Data_I, FinalCollection_I, RenderingData_I, CellData_I } from "types/collections.type";
 import { Callback_I } from "types/emitter.type";
 import { deepMerge, generatorFont } from "helpers";
 
@@ -497,6 +497,18 @@ class Core {
    * @memberof Core
    */
   private _filterRenderingData(data: Data_I): RenderingData_I {
+    const { rows } = data;
+    let heightCount = 0;
+
+    rows.forEach((row, rowIndex) => {
+      const { size: height } = row;
+      const cells = <CellData_I[]>row.cells;
+
+      cells.forEach((cell, cellIndex) => {
+        const { size: width } = cell;
+        const cellPos = [width * cellIndex, height * rowIndex];
+      });
+    });
     return {};
   }
 
