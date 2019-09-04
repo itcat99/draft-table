@@ -14,44 +14,6 @@ type CellValue_Type = Plugin | string | undefined | null | number; // 插件实�
 export type CellDataArr_Type = string[] | number[] | Array<CellData_I>;
 export type GlobalIndex_Type = number[];
 
-// interface customStyle_I<T, M> {
-//   (collection: T, data?: Data_I<M>): {
-//     line?: LineStyle_I;
-//     rect?: RectStyle_I;
-//     text?: TextStyle_I;
-//   };
-// }
-
-interface CommonItem_I {
-  [key: string]: any;
-  hidden: boolean; // 是否隐藏
-  id?: Id_Type; // 主键，唯一
-  index?: number; // 在当前集合内的索引
-  locked: boolean; // 是否锁定
-  // pos?: Pos_Type; // 在总视图内的位置信息 [x,y]
-  selected: boolean; // 是否选中
-  size?: number; // row的height或col的width
-}
-
-interface Cell_I {
-  [key: string]: any;
-  id?: Id_Type; // col的id
-  index?: number; // 在row内的索引
-  selected?: boolean; // 是否选中
-  type?: CellType_Enum; // 格子的类型
-  value?: CellValue_Type; // 格子的值
-}
-
-// 行集合
-export interface RowItem_I extends CommonItem_I {
-  data?: Cell_I[]; // 当前行包含的格子集合
-}
-
-// 列集合
-export interface ColItem_I extends CommonItem_I {
-  data?: Id_Type[]; // 和row上相对应的id集合
-}
-
 // 最终绘制的集合结构
 export interface FinalCollection_I<T, M> {
   data: M[];
@@ -65,10 +27,12 @@ export interface RenderingData_I {
   text?: FinalCollection_I<TextStyle_I, Text>[];
 }
 
+// 简单的data
 export interface SimpleData_I {
   [index: number]: number | string | SimpleData_I;
 }
 
+// Data结构
 export interface Data_I {
   parentId?: Id_Type;
   parentIndex?: GlobalIndex_Type;
@@ -79,8 +43,11 @@ export interface Data_I {
   rows?: RowData_I[];
   rowSize?: number;
   wrap?: boolean;
+  offsetWithViewX?: number;
+  offsetWithViewY?: number;
 }
 
+// 行结构
 export interface RowData_I {
   parentIndex?: GlobalIndex_Type;
   children?: Data_I;
@@ -96,8 +63,11 @@ export interface RowData_I {
   size?: number;
   style?: DataStyle_I;
   wrap?: boolean;
+  // offsetWithViewX?: number;
+  // offsetWithViewY?: number;
 }
 
+// 格子结构
 export interface CellData_I {
   hidden?: boolean;
   id?: Id_Type;
