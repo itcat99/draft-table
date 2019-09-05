@@ -151,6 +151,10 @@ class Core {
     });
 
     this.viewData = this.DATA.get();
+
+    console.log("total height: ", this.DATA.getTotalHeight());
+    console.log("total width: ", this.DATA.getTotalWidth());
+
     this.renderingData = this._filterRenderingData(this.viewData);
     // this.draw();
   }

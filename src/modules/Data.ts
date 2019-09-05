@@ -57,33 +57,42 @@ interface ParseOpts_I {
 }
 
 class Data {
-  private width: number; // 视图宽度
-  private height: number; // 视图高度
+  private _width: number; // 视图宽度
+  private _height: number; // 视图高度
 
-  private data: Data_I; // 传入的数据集合
-  private originData: Data_I; // 源集合
-  private viewData: Data_I; // 视图集合
+  private _data: Data_I; // 传入的数据集合
+  private _originData: Data_I; // 源集合
+  private _viewData: Data_I; // 视图集合
 
-  private index: GlobalIndex_Type; // 当前行的索引
-  private deep: number; // 当前检查的深度
+  private _index: GlobalIndex_Type; // 当前行的索引
+  private _deep: number; // 当前检查的深度
 
-  private currentOffsetX: number; // 当前横向偏移量
-  private currentOffsetY: number; // 当前纵向偏移量
+  private _currentOffsetX: number; // 当前横向偏移量
+  private _currentOffsetY: number; // 当前纵向偏移量
 
-  private emitter: Emitter;
+  private _totalHeight: number; // 行总长度
+  private _totalWidth: number; // 列总宽度
+
+  private _emitter: Emitter;
 
   constructor(public props: DataProps_I) {
     const { data, width, height, emitter } = this.props;
 
-    this.currentOffsetY = 0;
-    this.currentOffsetX = 0;
-    this.emitter = emitter;
-    this.width = width;
-    this.height = height;
-    this.data = data;
-    this.originData = this._parseData(this.data);
-    this.viewData = this._parseViewData(this.originData);
-    // this.index = [0];
+    this._currentOffsetY = 0;
+    this._currentOffsetX = 0;
+    this._emitter = emitter;
+    this._width = width;
+    this._height = height;
+    this._data = data;
+
+    this._totalHeight = 0;
+    this._totalWidth = 0;
+
+    this._originData = this._parseData(this._data);
+    this._viewData = this._parseViewData(this._originData);
+    // this._index = [0];
+
+    this._totalWidth = this.updateTotlaWidth();
   }
 
   /**
@@ -112,7 +121,7 @@ class Data {
     if (parentId) _data.parentId = parentId;
     if (parentIndex) _data.parentIndex = parentIndex;
 
-    _data.rows = this._normailzedRows(_data.rows, deep, parentIndex);
+    _data.rows = this._normailzedRows(_data, deep, parentIndex);
     return _data;
   }
 
@@ -127,8 +136,11 @@ class Data {
    * @returns
    * @memberof Core
    */
-  private _normailzedRows(rows: RowData_I[], deep: number = 0, parentIndex?: GlobalIndex_Type) {
-    if (!rows) return [];
+  private _normailzedRows(data: Data_I, deep: number = 0, parentIndex?: GlobalIndex_Type) {
+    const { rows, hidden: dataHidden } = data;
+    if (!rows) {
+      return [];
+    }
     let result: RowData_I[] = [];
 
     for (let index = 0; index < rows.length; index++) {
@@ -169,6 +181,9 @@ class Data {
           parentIndex: childParentIndex,
         });
       }
+
+      const { hidden, size } = _row;
+      if (!dataHidden && !hidden) this._totalHeight += size;
 
       result.push(_row);
     }
@@ -238,11 +253,11 @@ class Data {
    * @memberof Data
    */
   private _parseViewData(data: Data_I, offset: number = 0, count?: number): Data_I {
-    if (!this.index) this.index = [1];
+    if (!this._index) this._index = [1];
     const result = Object.assign({}, data);
     const { rows, offsetWithViewY } = result;
 
-    const current = this.getRowByIndex(rows, this.index);
+    const current = this.getRowByIndex(rows, this._index);
 
     // 正向偏移时， 当偏移量小于当前size + 视图纵向偏移 返回当前Data
     if (offset > 0 && offset < current.size + offsetWithViewY) return result;
@@ -256,21 +271,21 @@ class Data {
 
     const handler = offset >= 0 ? this.getNextRow.bind(this) : this.getPrevRow.bind(this);
 
-    let next = handler(rows, this.index);
+    let next = handler(rows, this._index);
     if (!next) {
       // 没有下一个就返回当前的
       return result;
     }
 
     const { size } = next;
-    this.index = this.getIndexInTotal(next);
+    this._index = this.getIndexInTotal(next);
 
     if (size > count) {
       result.offsetWithViewY = offset >= 0 ? -count : count - size;
-      this.originData.offsetWithViewY = result.offsetWithViewY;
+      this._originData.offsetWithViewY = result.offsetWithViewY;
     } else if (size === count) {
       result.offsetWithViewY = 0;
-      this.originData.offsetWithViewY = result.offsetWithViewY;
+      this._originData.offsetWithViewY = result.offsetWithViewY;
     } else {
       return this._parseViewData(result, offset, count - current.size);
     }
@@ -280,8 +295,8 @@ class Data {
         currentRow: current,
       }),
     );
-    result.offsetWithViewX = this.originData.offsetWithViewX;
-    this.emitter.fire("viewDataChange", [result], "_DATA_");
+    result.offsetWithViewX = this._originData.offsetWithViewX;
+    this._emitter.fire("viewDataChange", [result], "_DATA_");
     return result;
   }
 
@@ -307,8 +322,8 @@ class Data {
     rows?: RowData_I[];
     count?: number;
   }): RowData_I[] {
-    const originRows = <RowData_I[]>[].concat(this.originData.rows);
-    const { offsetWithViewY } = this.originData;
+    const originRows = <RowData_I[]>[].concat(this._originData.rows);
+    const { offsetWithViewY } = this._originData;
     if (currentRow) {
       const { size, hidden } = currentRow;
 
@@ -316,7 +331,7 @@ class Data {
         const currentSize = count + size;
         rows.push(currentRow);
 
-        if (currentSize + offsetWithViewY < this.height) {
+        if (currentSize + offsetWithViewY < this._height) {
           const next = this.getNextRow(originRows, this.getIndexInTotal(currentRow));
           if (!next) return rows;
 
@@ -354,12 +369,12 @@ class Data {
       const { size } = <CellData_I>cells[index];
       count += size;
 
-      if (count > this.currentOffsetX && isUndefined(start)) {
+      if (count > this._currentOffsetX && isUndefined(start)) {
         start = index;
-        this.originData.offsetWithViewX = size - (count - this.currentOffsetX);
+        this._originData.offsetWithViewX = size - (count - this._currentOffsetX);
       }
 
-      if (count - this.currentOffsetX >= this.width) {
+      if (count - this._currentOffsetX >= this._width) {
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i];
           const { cells } = row;
@@ -519,7 +534,7 @@ class Data {
     const { parentIndex } = row;
     if (!parentIndex) return;
 
-    const parent = this.getRowByIndex(this.originData.rows, parentIndex);
+    const parent = this.getRowByIndex(this._originData.rows, parentIndex);
     const bro = this.getNextBro(parent);
     if (bro) return bro;
 
@@ -539,7 +554,7 @@ class Data {
     const broIndex = this.getIndexInTotal(row);
     broIndex[broIndex.length - 1] += 1;
 
-    return this.getRowByIndex(this.originData.rows, broIndex);
+    return this.getRowByIndex(this._originData.rows, broIndex);
   }
 
   /**
@@ -555,7 +570,7 @@ class Data {
     const broIndex = this.getIndexInTotal(row);
     broIndex[broIndex.length - 1] -= 1;
 
-    return this.getRowByIndex(this.originData.rows, broIndex);
+    return this.getRowByIndex(this._originData.rows, broIndex);
   }
 
   /**
@@ -586,7 +601,7 @@ class Data {
    * @memberof Data
    */
   getOrigin() {
-    return this.originData;
+    return this._originData;
   }
 
   /**
@@ -598,7 +613,7 @@ class Data {
    * @memberof Data
    */
   get() {
-    return this.viewData;
+    return this._viewData;
   }
 
   /**
@@ -610,16 +625,127 @@ class Data {
    * @memberof Data
    */
   setSize({ width, height }: { width: number; height: number }) {
-    this.width = width || this.width;
-    this.height = height || this.height;
+    this._width = width || this._width;
+    this._height = height || this._height;
 
-    this.viewData.rows = this.sliceCell(
+    this._viewData.rows = this.sliceCell(
       this.sliceRow({
-        currentRow: this.getRowByIndex(this.originData.rows, this.index),
+        currentRow: this.getRowByIndex(this._originData.rows, this._index),
       }),
     );
-    this.viewData.offsetWithViewX = this.originData.offsetWithViewX;
-    this.emitter.fire("viewDataChange", [this.viewData], "_DATA_");
+    this._viewData.offsetWithViewX = this._originData.offsetWithViewX;
+    this._emitter.fire("viewDataChange", [this._viewData], "_DATA_");
+  }
+
+  /**
+   * 获取当前的总体高度
+   *
+   * @author FreMaNgo
+   * @date 2019-09-05
+   * @returns
+   * @memberof Data
+   */
+  getTotalHeight() {
+    return this._totalHeight;
+  }
+
+  /**
+   * 获取当前的总体宽度
+   *
+   * @author FreMaNgo
+   * @date 2019-09-05
+   * @returns
+   * @memberof Data
+   */
+  getTotalWidth() {
+    return this._totalWidth;
+  }
+
+  /**
+   *  更新totalHeight并返回更新后的值
+   *
+   *  如果 rows有值，则在原有基础上增加或删除
+   *  没有就算总体的
+   *
+   * @author FreMaNgo
+   * @date 2019-09-05
+   * @param {RowData_I[]} [rows] 行集合
+   * @param {boolean} [minus=false] 是否减去
+   * @returns
+   * @memberof Data
+   */
+  updateTotalHeight(rows?: RowData_I[], minus: boolean = false) {
+    const hasRows = rows ? true : false;
+    const { hidden: dataHidden } = this._originData;
+    if (dataHidden) {
+      this._totalHeight = 0;
+      return this._totalHeight;
+    }
+
+    rows = rows || this._originData.rows;
+    const count = this.getRowsHeight(rows);
+
+    this._totalHeight = hasRows
+      ? minus
+        ? this._totalHeight - count
+        : this._totalHeight + count
+      : count;
+
+    return this._totalHeight;
+  }
+
+  /**
+   * 更新totalWidth并返回更新后的值
+   *
+   * @author FreMaNgo
+   * @date 2019-09-05
+   * @param {CellData_I[]} [cells] 格子集合
+   * @param {boolean} [minus=false] 是否减去
+   * @returns
+   * @memberof Data
+   */
+  updateTotlaWidth(cells?: CellData_I[], minus: boolean = false) {
+    const hasCells = cells ? true : false;
+    let count = 0;
+    cells = cells || <CellData_I[]>this._originData.rows[0].cells;
+
+    cells.forEach(cell => {
+      const { hidden, size } = cell;
+      if (!hidden) count += size;
+    });
+
+    this._totalWidth = hasCells
+      ? minus
+        ? this._totalWidth - count
+        : this._totalWidth + count
+      : count;
+    return this._totalWidth;
+  }
+
+  /**
+   * 获取行集合的高度
+   *
+   * @author FreMaNgo
+   * @date 2019-09-05
+   * @param {RowData_I[]} rows
+   * @returns
+   * @memberof Data
+   */
+  getRowsHeight(rows: RowData_I[]) {
+    if (!rows || !rows.length) return 0;
+    let result = 0;
+
+    rows.forEach(row => {
+      const { hidden, size, children } = row;
+
+      if (!hidden) result += size;
+      if (children) {
+        const { hidden: childrenHidden, rows: childrenRows } = children;
+        if (!childrenHidden) result += this.getRowsHeight(childrenRows);
+      }
+    });
+
+    return result;
   }
 }
 
