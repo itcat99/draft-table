@@ -524,7 +524,7 @@ class Core {
   private getLine(data: Data_I): any {
     const { rows } = data;
     let result: Line_I[] = [];
-    const coordinate: Array<number[]> = this.getCoordinate(rows);
+    const coordinate: number[][][] = this.getCoordinate(rows);
     console.log(coordinate, "coordinate");
     return result;
   }
@@ -535,10 +535,9 @@ class Core {
    * @param {RowData_I} rows
    * @returns {number[]}
    * @memberof Core
-   * @rule :
    */
-  private getCoordinate(rows: RowData_I[]): Array<number[]> {
-    let result: Array<number[]> = [];
+  private getCoordinate(rows: RowData_I[]): number[][][] {
+    let result: number[][][] = [];
     //todo 参考起点 需要考虑根据屏幕滚动变动计算
     const referenceStartPoint: number[] = [0, 0];
     const rowSizeArray =
@@ -548,6 +547,7 @@ class Core {
       });
     rows &&
       rows.forEach((row: RowData_I, index: number) => {
+        let rowPointArray: number[][] = [];
         const { cells } = row;
         const rowStartPoint: number[] = this.getPoint(
           "ROW",
@@ -555,7 +555,7 @@ class Core {
           index,
           rowSizeArray,
         );
-        result.push(rowStartPoint);
+        rowPointArray.push(rowStartPoint);
 
         const cellSizeArray: number[] =
           cells &&
@@ -572,8 +572,9 @@ class Core {
         cells &&
           cells.forEach((cell: any, index: number) => {
             const point: number[] = this.getPoint("CELL", rowStartPoint, index, cellSizeArray);
-            result.push(point);
+            rowPointArray.push(point);
           });
+        result.push(rowPointArray);
       });
     return result;
   }
