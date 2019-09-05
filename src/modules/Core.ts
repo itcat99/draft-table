@@ -16,13 +16,20 @@ import Scrollbar from "plugins/Scrollbar";
 import { Config_I, Id_Type } from "types/common.type";
 import { LineStyle_I, RectStyle_I, TextStyle_I } from "types/style.type";
 import { RegisterOptions_I, PluginCollection_I } from "types/plugins.type";
-import { Data_I, FinalCollection_I, RenderingData_I, CellData_I } from "types/collections.type";
+import {
+  Data_I,
+  FinalCollection_I,
+  RenderingData_I,
+  CellData_I,
+  RowData_I,
+} from "types/collections.type";
 import { Callback_I } from "types/emitter.type";
 import { deepMerge, generatorFont } from "helpers";
 
 import Line from "components/Line";
 import Rect from "components/Rect";
 import Text from "components/Text";
+import { isArray } from "util";
 
 class Core {
   public COLLECTIONS: any;
@@ -246,7 +253,7 @@ class Core {
   // todo (1)缺失测试（2）缺失数据变动后的告知（3）缺失移出相关的说明性质注释
   insertRow(key: Id_Type, data: RowData_I | Array<RowData_I>): void {
     const originData = this.data;
-    let rows = originData.items || [];
+    let rows = originData.rows || [];
 
     const insertRowBykey: Function = (
       rows: Array<RowData_I>,

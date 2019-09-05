@@ -223,6 +223,8 @@ class Data {
    *  获取下一个或上一个的的index
    *  从index开始计算size的叠加 直到大于height
    *
+   *  <!--- 修改了this.originData的offsetWithViewY属性 ---!>
+   *
    *  排除：
    *  1. hidden的row
    *  2. hidden的col
@@ -265,13 +267,20 @@ class Data {
 
     if (size > count) {
       result.offsetWithViewY = offset >= 0 ? -count : count - size;
+      this.originData.offsetWithViewY = result.offsetWithViewY;
     } else if (size === count) {
       result.offsetWithViewY = 0;
+      this.originData.offsetWithViewY = result.offsetWithViewY;
     } else {
       return this._parseViewData(result, offset, count - current.size);
     }
 
-    result.rows = this.sliceRow(current, result.offsetWithViewY);
+    result.rows = this.sliceCell(
+      this.sliceRow({
+        currentRow: current,
+      }),
+    );
+    result.offsetWithViewX = this.originData.offsetWithViewX;
     this.emitter.fire("viewDataChange", [result], "_DATA_");
     return result;
   }
@@ -289,13 +298,17 @@ class Data {
    * @returns {RowData_I[]}
    * @memberof Data
    */
-  private sliceRow(
-    currentRow: RowData_I,
-    offsetWithViewY: number = 0,
-    rows: RowData_I[] = [],
-    count: number = 0,
-  ): RowData_I[] {
-    const originRows = [].concat(this.originData.rows);
+  private sliceRow({
+    currentRow,
+    rows = [],
+    count = 0,
+  }: {
+    currentRow: RowData_I;
+    rows?: RowData_I[];
+    count?: number;
+  }): RowData_I[] {
+    const originRows = <RowData_I[]>[].concat(this.originData.rows);
+    const { offsetWithViewY } = this.originData;
     if (currentRow) {
       const { size, hidden } = currentRow;
 
@@ -307,7 +320,11 @@ class Data {
           const next = this.getNextRow(originRows, this.getIndexInTotal(currentRow));
           if (!next) return rows;
 
-          return this.sliceCell(this.sliceRow(next, offsetWithViewY, rows, currentSize));
+          return this.sliceRow({
+            currentRow: next,
+            rows,
+            count: currentSize,
+          });
         }
       }
     }
@@ -317,6 +334,8 @@ class Data {
 
   /**
    * 根据视图宽度 过滤cell
+   *
+   * <!--- 会修改 this.originData的offsetWithViewX属性 ---!>
    *
    * @author FreMaNgo
    * @date 2019-08-30
@@ -337,6 +356,7 @@ class Data {
 
       if (count > this.currentOffsetX && isUndefined(start)) {
         start = index;
+        this.originData.offsetWithViewX = size - (count - this.currentOffsetX);
       }
 
       if (count - this.currentOffsetX >= this.width) {
@@ -593,10 +613,12 @@ class Data {
     this.width = width || this.width;
     this.height = height || this.height;
 
-    const { offsetWithViewY } = this.viewData;
     this.viewData.rows = this.sliceCell(
-      this.sliceRow(this.getRowByIndex(this.originData.rows, this.index), offsetWithViewY),
+      this.sliceRow({
+        currentRow: this.getRowByIndex(this.originData.rows, this.index),
+      }),
     );
+    this.viewData.offsetWithViewX = this.originData.offsetWithViewX;
     this.emitter.fire("viewDataChange", [this.viewData], "_DATA_");
   }
 }
