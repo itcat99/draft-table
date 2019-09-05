@@ -29,7 +29,9 @@ import { deepMerge, generatorFont } from "helpers";
 import Line from "components/Line";
 import Rect from "components/Rect";
 import Text from "components/Text";
-import { isArray } from "util";
+import { Line_I } from "types/plugins/canvas.types";
+import { listenerCount } from "cluster";
+import { format } from "url";
 
 class Core {
   public COLLECTIONS: any;
@@ -251,35 +253,36 @@ class Core {
    *        rows && rows.findIndex()
    */
   // todo (1)缺失测试（2）缺失数据变动后的告知（3）缺失移出相关的说明性质注释
-  insertRow(key: Id_Type, data: RowData_I | Array<RowData_I>): void {
-    const originData = this.data;
-    let rows = originData.rows || [];
+  //todo 暂时注释掉关于插入方法的实现络，原因：数据结构存在变动，故策略也需要调整
+  // insertRow(key: Id_Type, data: RowData_I | Array<RowData_I>): void {
+  //   const originData = this.data;
+  //   let rows = originData.items || [];
 
-    const insertRowBykey: Function = (
-      rows: Array<RowData_I>,
-      key: Id_Type,
-      data: RowData_I | Array<RowData_I>,
-    ) => {
-      const insertData = isArray(data) ? data : [data];
-      rows &&
-        rows.forEach((row: any, index: number) => {
-          const rowChildren = row.children;
-          const isExistChild = rowChildren && isArray(rowChildren);
-          if (isExistChild) {
-            insertRowBykey(rowChildren, key, insertData);
-          } else {
-            const rowKey = row.id || "";
-            if (rowKey === key) {
-              rows.splice(index, 0, ...insertData);
-            }
-          }
-        });
-    };
-    // 第一步，根据key获取到行所在的位置;
-    // 第二步，统一要插入的数据，在固定位置上加入；
-    insertRowBykey(rows, key, data);
-    // 第三步，[未实现]触发this.data 的更新（emitter); ==> 调用store 更新数据
-  }
+  //   const insertRowBykey: Function = (
+  //     rows: Array<RowData_I>,
+  //     key: Id_Type,
+  //     data: RowData_I | Array<RowData_I>,
+  //   ) => {
+  //     const insertData = isArray(data) ? data : [data];
+  //     rows &&
+  //       rows.forEach((row: any, index: number) => {
+  //         const rowChildren = row.children;
+  //         const isExistChild = rowChildren && isArray(rowChildren);
+  //         if (isExistChild) {
+  //           insertRowBykey(rowChildren, key, insertData);
+  //         } else {
+  //           const rowKey = row.id || "";
+  //           if (rowKey === key) {
+  //             rows.splice(index, 0, ...insertData);
+  //           }
+  //         }
+  //       });
+  //   };
+  //   // 第一步，根据key获取到行所在的位置;
+  //   // 第二步，统一要插入的数据，在固定位置上加入；
+  //   insertRowBykey(rows, key, data);
+  //   // 第三步，[未实现]触发this.data 的更新（emitter); ==> 调用store 更新数据
+  // }
   insertCol(key: Id_Type, data: any) {}
   // 删除
   delRow(key: Id_Type) {}
@@ -503,19 +506,53 @@ class Core {
    * @memberof Core
    */
   private _filterRenderingData(data: Data_I): RenderingData_I {
+    // todo 关于外层定义了，wrap为true，当齐换行的逻辑为true时的影响
+    const { hidden, wrap } = data;
+    if (hidden) {
+      // 当viewdata中的最外层hidden为true时，直接返回空的渲染集合
+      return {};
+    }
+    const line = this.getLine(data);
+    console.info(line, "line");
+    return { line };
+  }
+
+  private getLine(data: Data_I): any {
     const { rows } = data;
-    let heightCount = 0;
+    let result: Line_I[] = [];
+    rows &&
+      rows.forEach((row, index) => {
+        const { hidden, wrap, size, cells } = row;
+        const startLinePoint = this.getStartLinePoint(index, size, wrap);
+        // const cellSizeArray: number[] = cells && cells.map();
 
-    rows.forEach((row, rowIndex) => {
-      const { size: height } = row;
-      const cells = <CellData_I[]>row.cells;
-
-      cells.forEach((cell, cellIndex) => {
-        const { size: width } = cell;
-        const cellPos = [width * cellIndex, height * rowIndex];
+        cells &&
+          cells.forEach((cell: any) => {
+            const { size } = cell;
+            const point = this.getEndLinePoint(startLinePoint, size);
+            result.push(point);
+          });
       });
-    });
-    return {};
+    return result;
+  }
+
+  private getEndLinePoint(startLinePoint: Line_I, size: number): Line_I {
+    const result = startLinePoint;
+    const { from, to } = result;
+    const [fromX, fromY] = from;
+    to[0] = fromX + size;
+    to[1] = fromY;
+    return result;
+  }
+
+  private getStartLinePoint(rowIndex: number, rowSize: number, wrap: boolean): Line_I {
+    let line: Line_I = { from: [0, 0], to: [0, 0] };
+    if (!wrap) {
+      //todo 【需要考虑】 关于自动换行后，高度变动的量的获取 和 自动换行的依据（根据数据标识？ 还是根据文字长度来判断）
+    } else {
+      line.from[0] = rowIndex * rowSize;
+    }
+    return line;
   }
 
   private _registerPlugins() {
