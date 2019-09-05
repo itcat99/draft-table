@@ -549,7 +549,8 @@ class Core {
     rows &&
       rows.forEach((row: RowData_I, index: number) => {
         const { cells } = row;
-        const rowStartPoint: number[] = this.getRowStartPoint(
+        const rowStartPoint: number[] = this.getPoint(
+          "ROW",
           referenceStartPoint,
           index,
           rowSizeArray,
@@ -570,25 +571,29 @@ class Core {
         //todo:此处cell无用
         cells &&
           cells.forEach((cell: any, index: number) => {
-            const point: number[] = this.getCellPoint(rowStartPoint, index, cellSizeArray);
+            const point: number[] = this.getPoint("CELL", rowStartPoint, index, cellSizeArray);
             result.push(point);
           });
       });
     return result;
   }
-  private getRowStartPoint(
-    referenceStartPoint: number[],
+  private getPoint(
+    type: string,
+    referencePoint: number[],
     index: number,
-    rowSizeArray: number[],
+    sizeArray: number[],
   ): number[] {
-    let [x, y] = referenceStartPoint;
-    y = getSumByRange(rowSizeArray, 0, index);
-    return [x, y];
-  }
-
-  private getCellPoint(rowStartPoint: number[], index: number, cellSizeArray: number[]): number[] {
-    let [x, y] = rowStartPoint;
-    x = getSumByRange(cellSizeArray, 0, index);
+    let [x, y] = referencePoint;
+    switch (type) {
+      case "ROW":
+        y = getSumByRange(sizeArray, 0, index);
+        break;
+      case "CELL":
+        x = getSumByRange(sizeArray, 0, index);
+        break;
+      default:
+        return [x, y];
+    }
     return [x, y];
   }
 
