@@ -16,7 +16,14 @@ import Scrollbar from "plugins/Scrollbar";
 import { Config_I, Id_Type } from "types/common.type";
 import { LineStyle_I, RectStyle_I, TextStyle_I } from "types/style.type";
 import { RegisterOptions_I, PluginCollection_I } from "types/plugins.type";
-import { Data_I, FinalCollection_I, RenderingData_I, CellData_I } from "types/collections.type";
+import {
+  Data_I,
+  FinalCollection_I,
+  RenderingData_I,
+  CellData_I,
+  RowData_I,
+  CellDataArr_Type,
+} from "types/collections.type";
 import { Callback_I } from "types/emitter.type";
 import { deepMerge, generatorFont } from "helpers";
 
@@ -24,6 +31,7 @@ import Line from "components/Line";
 import Rect from "components/Rect";
 import Text from "components/Text";
 import { Line_I } from "types/plugins/canvas.types";
+import { getSumByRange } from "helpers/calculate";
 
 class Core {
   public COLLECTIONS: any;
@@ -508,43 +516,80 @@ class Core {
     console.info(line, "line");
     return { line };
   }
-
+  /**
+   * @description 根据数据集合获取需要绘制的线条的集合
+   * @private
+   * @param data Data_I 即viewData
+   */
   private getLine(data: Data_I): any {
     const { rows } = data;
     let result: Line_I[] = [];
-    rows &&
-      rows.forEach((row, index) => {
-        const { hidden, wrap, size, cells } = row;
-        const startLinePoint = this.getStartLinePoint(index, size, wrap);
-        // const cellSizeArray: number[] = cells && cells.map();
+    const coordinate: Array<number[]> = this.getCoordinate(rows);
+    console.log(coordinate, "coordinate");
+    return result;
+  }
 
+  /**
+   *@description 构建参考点做构成的二维的坐标系
+   * @private
+   * @param {RowData_I} rows
+   * @returns {number[]}
+   * @memberof Core
+   * @rule :
+   */
+  private getCoordinate(rows: RowData_I[]): Array<number[]> {
+    let result: Array<number[]> = [];
+    //todo 参考起点 需要考虑根据屏幕滚动变动计算
+    const referenceStartPoint: number[] = [0, 0];
+    const rowSizeArray =
+      rows &&
+      rows.map((row: RowData_I): number => {
+        return row.size;
+      });
+    rows &&
+      rows.forEach((row: RowData_I, index: number) => {
+        const { cells } = row;
+        const rowStartPoint: number[] = this.getRowStartPoint(
+          referenceStartPoint,
+          index,
+          rowSizeArray,
+        );
+        result.push(rowStartPoint);
+
+        const cellSizeArray: number[] =
+          cells &&
+          (cells as Array<CellData_I>).map((cell: CellData_I): number => {
+            return cell.size;
+          });
+
+        // const length = (cells && cells.length) || 0;
+        // for (let i = 0; i < length; i++) {
+        //   const point: number[] = this.getCellPoint(rowStartPoint, i, cellSizeArray);
+        //   result.push(point);
+        // }
+        //todo:此处cell无用
         cells &&
-          cells.forEach((cell: any) => {
-            const { size } = cell;
-            const point = this.getEndLinePoint(startLinePoint, size);
+          cells.forEach((cell: any, index: number) => {
+            const point: number[] = this.getCellPoint(rowStartPoint, index, cellSizeArray);
             result.push(point);
           });
       });
     return result;
   }
-
-  private getEndLinePoint(startLinePoint: Line_I, size: number): Line_I {
-    const result = startLinePoint;
-    const { from, to } = result;
-    const [fromX, fromY] = from;
-    to[0] = fromX + size;
-    to[1] = fromY;
-    return result;
+  private getRowStartPoint(
+    referenceStartPoint: number[],
+    index: number,
+    rowSizeArray: number[],
+  ): number[] {
+    let [x, y] = referenceStartPoint;
+    y = getSumByRange(rowSizeArray, 0, index);
+    return [x, y];
   }
 
-  private getStartLinePoint(rowIndex: number, rowSize: number, wrap: boolean): Line_I {
-    let line: Line_I = { from: [0, 0], to: [0, 0] };
-    if (!wrap) {
-      //todo 【需要考虑】 关于自动换行后，高度变动的量的获取 和 自动换行的依据（根据数据标识？ 还是根据文字长度来判断）
-    } else {
-      line.from[0] = rowIndex * rowSize;
-    }
-    return line;
+  private getCellPoint(rowStartPoint: number[], index: number, cellSizeArray: number[]): number[] {
+    let [x, y] = rowStartPoint;
+    x = getSumByRange(cellSizeArray, 0, index);
+    return [x, y];
   }
 
   private _registerPlugins() {
