@@ -512,7 +512,7 @@ class Core {
       // 当viewdata中的最外层hidden为true时，直接返回空的渲染集合
       return {};
     }
-    const line = this.getLine(data);
+    const line = this._getLine(data);
     console.info(line, "line");
     return { line };
   }
@@ -521,10 +521,11 @@ class Core {
    * @private
    * @param data Data_I 即viewData
    */
-  private getLine(data: Data_I): any {
+  private _getLine(data: Data_I): any {
     const { rows } = data;
     let result: Line_I[] = [];
-    const coordinate: number[][][] = this.getCoordinate(rows);
+    const coordinate: number[][][] = this._getCoordinate(rows);
+    // todo: 此处坐标系计算逻辑上存在问题，导致缺失了[0,0] 点对应的行信息，需要修正
     console.log(coordinate, "coordinate");
     return result;
   }
@@ -536,7 +537,7 @@ class Core {
    * @returns {number[]}
    * @memberof Core
    */
-  private getCoordinate(rows: RowData_I[]): number[][][] {
+  private _getCoordinate(rows: RowData_I[]): number[][][] {
     let result: number[][][] = [];
     //todo 参考起点 需要考虑根据屏幕滚动变动计算
     const referenceStartPoint: number[] = [0, 0];
@@ -548,8 +549,8 @@ class Core {
     rows &&
       rows.forEach((row: RowData_I, index: number) => {
         let rowPointArray: number[][] = [];
-        const { cells } = row;
-        const rowStartPoint: number[] = this.getPoint(
+        const cells = <CellData_I[]>row.cells;
+        const rowStartPoint: number[] = this._getPoint(
           "ROW",
           referenceStartPoint,
           index,
@@ -559,7 +560,7 @@ class Core {
 
         const cellSizeArray: number[] =
           cells &&
-          (cells as Array<CellData_I>).map((cell: CellData_I): number => {
+          cells.map((cell: CellData_I): number => {
             return cell.size;
           });
 
@@ -570,15 +571,15 @@ class Core {
         // }
         //todo:此处cell无用
         cells &&
-          cells.forEach((cell: any, index: number) => {
-            const point: number[] = this.getPoint("CELL", rowStartPoint, index, cellSizeArray);
+          cells.forEach((cell: CellData_I, index: number) => {
+            const point: number[] = this._getPoint("CELL", rowStartPoint, index, cellSizeArray);
             rowPointArray.push(point);
           });
         result.push(rowPointArray);
       });
     return result;
   }
-  private getPoint(
+  private _getPoint(
     type: string,
     referencePoint: number[],
     index: number,
