@@ -525,7 +525,6 @@ class Core {
     const { rows } = data;
     let result: Line_I[] = [];
     const coordinate: number[][][] = this._getCoordinate(rows);
-    // todo: 此处坐标系计算逻辑上存在问题，导致缺失了[0,0] 点对应的行信息，需要修正
     console.log(coordinate, "coordinate");
     return result;
   }
@@ -541,11 +540,13 @@ class Core {
     let result: number[][][] = [];
     //todo 参考起点 需要考虑根据屏幕滚动变动计算
     const referenceStartPoint: number[] = [0, 0];
-    const rowSizeArray =
+    let rowSizeArray =
       rows &&
       rows.map((row: RowData_I): number => {
         return row.size;
       });
+    // 增加第0行的单元格的参考点的计算
+    rowSizeArray.splice(0, 0, 0);
     rows &&
       rows.forEach((row: RowData_I, index: number) => {
         let rowPointArray: number[][] = [];
