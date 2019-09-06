@@ -30,8 +30,7 @@ import Line from "components/Line";
 import Rect from "components/Rect";
 import Text from "components/Text";
 import { Line_I } from "types/plugins/canvas.types";
-import { listenerCount } from "cluster";
-import { format } from "url";
+import { getSumByRange } from "helpers/calculate";
 
 class Core {
   public COLLECTIONS: any;
@@ -511,52 +510,112 @@ class Core {
    */
   private _filterRenderingData(data: Data_I): RenderingData_I {
     // todo 关于外层定义了，wrap为true，当齐换行的逻辑为true时的影响
-    const { hidden, wrap } = data;
+    const { hidden, wrap, rows } = data;
     if (hidden) {
       // 当viewdata中的最外层hidden为true时，直接返回空的渲染集合
       return {};
     }
-    const line = this.getLine(data);
+    const coordinate: number[][][] = this._getCoordinate(rows);
+    console.log(coordinate, "coordinate");
+    const line = this._getLine(rows, coordinate);
     console.info(line, "line");
     return { line };
   }
-
-  private getLine(data: Data_I): any {
-    const { rows } = data;
+  /**
+   * @description 根据数据集合获取需要绘制的线条的集合
+   * @private
+   * @param data Data_I 即viewData
+   */
+  private _getLine(rows: RowData_I[], coordinate: number[][][]): any {
     let result: Line_I[] = [];
     rows &&
-      rows.forEach((row, index) => {
-        const { hidden, wrap, size, cells } = row;
-        const startLinePoint = this.getStartLinePoint(index, size, wrap);
-        // const cellSizeArray: number[] = cells && cells.map();
-
+      rows.forEach((row: RowData_I, indexRow: number) => {
+        const { cells } = row;
+        let line: any = {};
         cells &&
-          cells.forEach((cell: any) => {
-            const { size } = cell;
-            const point = this.getEndLinePoint(startLinePoint, size);
-            result.push(point);
+          cells.forEach((cell: any, indexCell: number) => {
+            // todo : 此处预留对于 单元格属性生效时的处理
+            const { hidden, merge, wrap, style } = cell,
+              start: number = indexRow,
+              end: number = indexCell + 1;
+            let from: number[] = coordinate[start][0],
+              to: number[] = coordinate[start][end];
+            line = Object.assign(line, { from, to });
           });
+        result.push(line);
       });
     return result;
   }
 
-  private getEndLinePoint(startLinePoint: Line_I, size: number): Line_I {
-    const result = startLinePoint;
-    const { from, to } = result;
-    const [fromX, fromY] = from;
-    to[0] = fromX + size;
-    to[1] = fromY;
+  /**
+   *@description 构建参考点做构成的二维的坐标系
+   * @private
+   * @param {RowData_I} rows
+   * @returns {number[]}
+   * @memberof Core
+   */
+  private _getCoordinate(rows: RowData_I[]): number[][][] {
+    let result: number[][][] = [];
+    //todo 参考起点 需要考虑根据屏幕滚动变动计算
+    const referenceStartPoint: number[] = [0, 0];
+    let rowSizeArray =
+      rows &&
+      rows.map((row: RowData_I): number => {
+        return row.size;
+      });
+    // 增加第0行的单元格的参考点的计算
+    rowSizeArray.splice(0, 0, 0);
+    rows &&
+      rows.forEach((row: RowData_I, index: number) => {
+        let rowPointArray: number[][] = [];
+        const cells = <CellData_I[]>row.cells;
+        const rowStartPoint: number[] = this._getPoint(
+          "ROW",
+          referenceStartPoint,
+          index,
+          rowSizeArray,
+        );
+        rowPointArray.push(rowStartPoint);
+
+        const cellSizeArray: number[] =
+          cells &&
+          cells.map((cell: CellData_I): number => {
+            return cell.size;
+          });
+
+        // const length = (cells && cells.length) || 0;
+        // for (let i = 0; i < length; i++) {
+        //   const point: number[] = this.getCellPoint(rowStartPoint, i, cellSizeArray);
+        //   result.push(point);
+        // }
+        //todo:此处cell无用
+        cells &&
+          cells.forEach((cell: CellData_I, index: number) => {
+            const point: number[] = this._getPoint("CELL", rowStartPoint, index, cellSizeArray);
+            rowPointArray.push(point);
+          });
+        result.push(rowPointArray);
+      });
     return result;
   }
-
-  private getStartLinePoint(rowIndex: number, rowSize: number, wrap: boolean): Line_I {
-    let line: Line_I = { from: [0, 0], to: [0, 0] };
-    if (!wrap) {
-      //todo 【需要考虑】 关于自动换行后，高度变动的量的获取 和 自动换行的依据（根据数据标识？ 还是根据文字长度来判断）
-    } else {
-      line.from[0] = rowIndex * rowSize;
+  private _getPoint(
+    type: string,
+    referencePoint: number[],
+    index: number,
+    sizeArray: number[],
+  ): number[] {
+    let [x, y] = referencePoint;
+    switch (type) {
+      case "ROW":
+        y = getSumByRange(sizeArray, 0, index);
+        break;
+      case "CELL":
+        x = getSumByRange(sizeArray, 0, index);
+        break;
+      default:
+        return [x, y];
     }
-    return line;
+    return [x, y];
   }
 
   private _registerPlugins() {

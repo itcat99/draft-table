@@ -11,7 +11,8 @@
     "dev": "webpack-dev-server --config webpack.dev.js",
     "build": "tsc",
     "doc": "docsify serve ./docs -p 3001",
-    "test:collection": "jest test/modules/collection/*"
+    "test:collection": "jest test/modules/collection/*",
+    "test:helpers": "jest test/helpers/*"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
