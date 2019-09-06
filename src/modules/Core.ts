@@ -507,12 +507,14 @@ class Core {
    */
   private _filterRenderingData(data: Data_I): RenderingData_I {
     // todo 关于外层定义了，wrap为true，当齐换行的逻辑为true时的影响
-    const { hidden, wrap } = data;
+    const { hidden, wrap, rows } = data;
     if (hidden) {
       // 当viewdata中的最外层hidden为true时，直接返回空的渲染集合
       return {};
     }
-    const line = this._getLine(data);
+    const coordinate: number[][][] = this._getCoordinate(rows);
+    console.log(coordinate, "coordinate");
+    const line = this._getLine(rows, coordinate);
     console.info(line, "line");
     return { line };
   }
@@ -521,11 +523,24 @@ class Core {
    * @private
    * @param data Data_I 即viewData
    */
-  private _getLine(data: Data_I): any {
-    const { rows } = data;
+  private _getLine(rows: RowData_I[], coordinate: number[][][]): any {
     let result: Line_I[] = [];
-    const coordinate: number[][][] = this._getCoordinate(rows);
-    console.log(coordinate, "coordinate");
+    rows &&
+      rows.forEach((row: RowData_I, indexRow: number) => {
+        const { cells } = row;
+        let line: any = {};
+        cells &&
+          cells.forEach((cell: any, indexCell: number) => {
+            // todo : 此处预留对于 单元格属性生效时的处理
+            const { hidden, merge, wrap, style } = cell,
+              start: number = indexRow,
+              end: number = indexCell + 1;
+            let from: number[] = coordinate[start][0],
+              to: number[] = coordinate[start][end];
+            line = Object.assign(line, { from, to });
+          });
+        result.push(line);
+      });
     return result;
   }
 
