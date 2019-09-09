@@ -1,5 +1,6 @@
 import Emitter from "./Emitter";
 import { deepMerge } from "helpers";
+import { isArray } from "util";
 
 /**
  * 模块定位：
@@ -42,14 +43,25 @@ class Store {
 
   /**
    * 获取储存的值
+   * 当传入的是array时，返回array内所有key对应的 key:value 对象集合
+   * 当传入是string时，返回这个key对应的值
    *
    * @author FreMaNgo
    * @date 2019-09-09
-   * @param {string} key
+   * @param {(string | string[])} key
    * @returns
    * @memberof Store
    */
-  get(key: string) {
+  get(key: string | string[]) {
+    if (isArray(key)) {
+      const result: { [key: string]: any } = {};
+      key.forEach(item => {
+        result[item] = this._data[item];
+      });
+
+      return result;
+    }
+
     return this._data[key];
   }
 

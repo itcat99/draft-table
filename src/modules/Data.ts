@@ -59,33 +59,33 @@ interface ParseOpts_I {
 }
 
 interface State_I {
-  viewWidth: number;
-  viewHeight: number;
-  originData: Data_I;
-  viewData: Data_I;
-  currentIndex: GlobalIndex_Type;
-  currentOffsetX: number;
-  currentOffsetY: number;
-  totalHeight: number;
-  totalWidth: number;
+  viewWidth: number; // 视图宽度
+  viewHeight: number; // 视图高度
+  originData: Data_I; // 源集合
+  viewData: Data_I; // 视图集合
+  currentIndex: GlobalIndex_Type; // 当前行的索引
+  currentOffsetX: number; // 当前横向偏移量
+  currentOffsetY: number; // 当前纵向偏移量
+  totalHeight: number; // 行总长度
+  totalWidth: number; // 列总宽度
 }
 
 class Data {
-  private _width: number; // 视图宽度
-  private _height: number; // 视图高度
+  // private _width: number; // 视图宽度
+  // private _height: number; // 视图高度
 
   private _data: Data_I; // 传入的数据集合
-  private _originData: Data_I; // 源集合
-  private _viewData: Data_I; // 视图集合
+  // private _originData: Data_I; // 源集合
+  // private _viewData: Data_I; // 视图集合
 
-  private _index: GlobalIndex_Type; // 当前行的索引
-  private _deep: number; // 当前检查的深度
+  // private _index: GlobalIndex_Type; // 当前行的索引
+  // private _deep: number; // 当前检查的深度
 
-  private _currentOffsetX: number; // 当前横向偏移量
-  private _currentOffsetY: number; // 当前纵向偏移量
+  // private _currentOffsetX: number; // 当前横向偏移量
+  // private _currentOffsetY: number; // 当前纵向偏移量
 
-  private _totalHeight: number; // 行总长度
-  private _totalWidth: number; // 列总宽度
+  // private _totalHeight: number; // 行总长度
+  // private _totalWidth: number; // 列总宽度
 
   private _emitter: Emitter;
   private _store: Store;
@@ -96,33 +96,44 @@ class Data {
     const { data, width, height, emitter, store } = this.props;
 
     this._data = data;
+    this._store = store;
 
     this.state = {
       viewHeight: height,
       viewWidth: width,
       totalHeight: 0,
       totalWidth: 0,
-      originData: this._parseData(this._data),
-      viewData: this._parseViewData(this._originData),
+      originData: null,
+      viewData: null,
       currentIndex: [0],
-      currentOffsetX: 0,
-      currentOffsetY: 0,
+      currentOffsetX: 0, // 当前横向偏移量
+      currentOffsetY: 0, // 当前纵向偏移量
     };
 
-    this._currentOffsetY = 0;
-    this._currentOffsetX = 0;
+    this._setStore(this.state);
+
+    // this._currentOffsetY = 0;
+    // this._currentOffsetX = 0;
     this._emitter = emitter;
-    this._width = width;
-    this._height = height;
+    // this._width = width;
+    // this._height = height;
 
-    this._totalHeight = 0;
-    this._totalWidth = 0;
+    // this._totalHeight = 0;
+    // this._totalWidth = 0;
+    this._setStore({
+      originData: this._parseData(this._data),
+    });
+    this._setStore({
+      viewData: this._parseViewData(this._getStore("originData")),
+    });
 
-    this._originData = this._parseData(this._data);
-    this._viewData = this._parseViewData(this._originData);
+    // this._originData = this._parseData(this._data);
+    // this._viewData = this._parseViewData(this._originData);
     // this._index = [0];
-
-    this._totalWidth = this.updateTotlaWidth();
+    this._setStore({
+      totalWidth: this.updateTotlaWidth(),
+    });
+    // this._totalWidth = this.updateTotlaWidth();
   }
 
   /**
@@ -213,7 +224,9 @@ class Data {
       }
 
       const { hidden, size } = _row;
-      if (!dataHidden && !hidden) this._totalHeight += size;
+      const currentTotalHeight = this._getStore("totalHeight");
+
+      if (!dataHidden && !hidden) this._setStore({ totalHeight: currentTotalHeight + size });
 
       result.push(_row);
     }
@@ -283,11 +296,13 @@ class Data {
    * @memberof Data
    */
   private _parseViewData(data: Data_I, offset: number = 0, count?: number): Data_I {
-    if (!this._index) this._index = [1];
+    const currentIndex = this._getStore("currentIndex");
+    if (!currentIndex) this._setStore({ currentIndex: [1] });
+
     const result = Object.assign({}, data);
     const { rows, offsetWithViewY } = result;
 
-    const current = this.getRowByIndex(rows, this._index);
+    const current = this.getRowByIndex(rows, currentIndex);
 
     // 正向偏移时， 当偏移量小于当前size + 视图纵向偏移 返回当前Data
     if (offset > 0 && offset < current.size + offsetWithViewY) return result;
@@ -301,21 +316,31 @@ class Data {
 
     const handler = offset >= 0 ? this.getNextRow.bind(this) : this.getPrevRow.bind(this);
 
-    let next = handler(rows, this._index);
+    let next = handler(rows, currentIndex);
     if (!next) {
       // 没有下一个就返回当前的
       return result;
     }
 
     const { size } = next;
-    this._index = this.getIndexInTotal(next);
+    this._setStore({
+      currentIndex: this.getIndexInTotal(next),
+    });
 
     if (size > count) {
       result.offsetWithViewY = offset >= 0 ? -count : count - size;
-      this._originData.offsetWithViewY = result.offsetWithViewY;
+      this._setStore({
+        originData: {
+          offsetWithViewY: result.offsetWithViewY,
+        },
+      });
     } else if (size === count) {
       result.offsetWithViewY = 0;
-      this._originData.offsetWithViewY = result.offsetWithViewY;
+      this._setStore({
+        originData: {
+          offsetWithViewY: result.offsetWithViewY,
+        },
+      });
     } else {
       return this._parseViewData(result, offset, count - current.size);
     }
@@ -325,7 +350,8 @@ class Data {
         currentRow: current,
       }),
     );
-    result.offsetWithViewX = this._originData.offsetWithViewX;
+    const originData = <Data_I>this._getStore("originData");
+    result.offsetWithViewX = originData.offsetWithViewX;
     this._emitter.fire("viewDataChange", [result], "_DATA_");
     return result;
   }
@@ -352,8 +378,10 @@ class Data {
     rows?: RowData_I[];
     count?: number;
   }): RowData_I[] {
-    const originRows = <RowData_I[]>[].concat(this._originData.rows);
-    const { offsetWithViewY } = this._originData;
+    const { rows: originRows, offsetWithViewY } = <Data_I>this._getStore("originData");
+    const viewHeight = this._getStore("viewHeight");
+    const _rows = <RowData_I[]>[].concat(originRows);
+
     if (currentRow) {
       const { size, hidden } = currentRow;
 
@@ -361,8 +389,8 @@ class Data {
         const currentSize = count + size;
         rows.push(currentRow);
 
-        if (currentSize + offsetWithViewY < this._height) {
-          const next = this.getNextRow(originRows, this.getIndexInTotal(currentRow));
+        if (currentSize + offsetWithViewY < viewHeight) {
+          const next = this.getNextRow(_rows, this.getIndexInTotal(currentRow));
           if (!next) return rows;
 
           return this.sliceRow({
@@ -390,6 +418,8 @@ class Data {
    */
   sliceCell(rows: RowData_I[]): RowData_I[] {
     if (!rows || !rows.length) return rows;
+    const currentOffsetX = this._getStore("currentOffsetX");
+    const viewWidth = this._getStore("viewWidth");
 
     const { cells } = rows[0];
     let count = 0,
@@ -399,12 +429,16 @@ class Data {
       const { size } = <CellData_I>cells[index];
       count += size;
 
-      if (count > this._currentOffsetX && isUndefined(start)) {
+      if (count > currentOffsetX && isUndefined(start)) {
         start = index;
-        this._originData.offsetWithViewX = size - (count - this._currentOffsetX);
+        this._setStore({
+          originData: {
+            offsetWithViewX: size - (count - currentOffsetX),
+          },
+        });
       }
 
-      if (count - this._currentOffsetX >= this._width) {
+      if (count - currentOffsetX >= viewWidth) {
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i];
           const { cells } = row;
@@ -563,8 +597,8 @@ class Data {
   getDeepestParentBro(row: RowData_I): RowData_I {
     const { parentIndex } = row;
     if (!parentIndex) return;
-
-    const parent = this.getRowByIndex(this._originData.rows, parentIndex);
+    const originData = <Data_I>this._getStore("originData");
+    const parent = this.getRowByIndex(originData.rows, parentIndex);
     const bro = this.getNextBro(parent);
     if (bro) return bro;
 
@@ -581,10 +615,11 @@ class Data {
    * @memberof Data
    */
   getNextBro(row: RowData_I): RowData_I {
+    const originData = <Data_I>this._getStore("originData");
     const broIndex = this.getIndexInTotal(row);
     broIndex[broIndex.length - 1] += 1;
 
-    return this.getRowByIndex(this._originData.rows, broIndex);
+    return this.getRowByIndex(originData.rows, broIndex);
   }
 
   /**
@@ -597,10 +632,11 @@ class Data {
    * @memberof Data
    */
   getPrevBro(row: RowData_I): RowData_I {
+    const originData = <Data_I>this._getStore("originData");
     const broIndex = this.getIndexInTotal(row);
     broIndex[broIndex.length - 1] -= 1;
 
-    return this.getRowByIndex(this._originData.rows, broIndex);
+    return this.getRowByIndex(originData.rows, broIndex);
   }
 
   /**
@@ -631,7 +667,7 @@ class Data {
    * @memberof Data
    */
   getOrigin() {
-    return this._originData;
+    return <Data_I>this._getStore("originData");
   }
 
   /**
@@ -643,7 +679,7 @@ class Data {
    * @memberof Data
    */
   get() {
-    return this._viewData;
+    return <Data_I>this._getStore("originView");
   }
 
   /**
@@ -655,16 +691,27 @@ class Data {
    * @memberof Data
    */
   setSize({ width, height }: { width: number; height: number }) {
-    this._width = width || this._width;
-    this._height = height || this._height;
+    width = width || this._getStore("viewWidth");
+    height = height || this._getStore("viewHeight");
 
-    this._viewData.rows = this.sliceCell(
+    const { data, currentIndex }: { data: Data_I; currentIndex: GlobalIndex_Type } = this._getStore(
+      ["originData", "currentIndex"],
+    );
+
+    const { rows, offsetWithViewX } = data;
+    const newRows = this.sliceCell(
       this.sliceRow({
-        currentRow: this.getRowByIndex(this._originData.rows, this._index),
+        currentRow: this.getRowByIndex(rows, currentIndex),
       }),
     );
-    this._viewData.offsetWithViewX = this._originData.offsetWithViewX;
-    this._emitter.fire("viewDataChange", [this._viewData], "_DATA_");
+
+    this._setStore({
+      viewData: {
+        rows: newRows,
+        offsetWithViewX,
+      },
+    });
+    this._emitter.fire("viewDataChange", [this.get()], "_DATA_");
   }
 
   /**
@@ -676,7 +723,7 @@ class Data {
    * @memberof Data
    */
   getTotalHeight() {
-    return this._totalHeight;
+    return this._getStore("totalHeight");
   }
 
   /**
@@ -688,7 +735,7 @@ class Data {
    * @memberof Data
    */
   getTotalWidth() {
-    return this._totalWidth;
+    return this._getStore("totalWidth");
   }
 
   /**
@@ -706,22 +753,23 @@ class Data {
    */
   updateTotalHeight(rows?: RowData_I[], minus: boolean = false) {
     const hasRows = rows ? true : false;
-    const { hidden: dataHidden } = this._originData;
+    const { hidden: dataHidden, rows: originRows } = this._getStore("originData");
+    const totalHeight = <number>this._getStore("totalHeight");
+
     if (dataHidden) {
-      this._totalHeight = 0;
-      return this._totalHeight;
+      this._setStore({
+        totalHeight: 0,
+      });
+      return this._getStore("totalHeight");
     }
 
-    rows = rows || this._originData.rows;
+    rows = rows || originRows;
     const count = this.getRowsHeight(rows);
+    this._setStore({
+      totalHeight: hasRows ? (minus ? totalHeight - count : totalHeight + count) : count,
+    });
 
-    this._totalHeight = hasRows
-      ? minus
-        ? this._totalHeight - count
-        : this._totalHeight + count
-      : count;
-
-    return this._totalHeight;
+    return this._getStore("totalHeight");
   }
 
   /**
@@ -736,20 +784,22 @@ class Data {
    */
   updateTotlaWidth(cells?: CellData_I[], minus: boolean = false) {
     const hasCells = cells ? true : false;
+    const { originData, totalWidth }: { originData: Data_I; totalWidth: number } = this._getStore([
+      "originData",
+      "totalWidth",
+    ]);
     let count = 0;
-    cells = cells || <CellData_I[]>this._originData.rows[0].cells;
+    cells = cells || <CellData_I[]>originData.rows[0].cells;
 
     cells.forEach(cell => {
       const { hidden, size } = cell;
       if (!hidden) count += size;
     });
 
-    this._totalWidth = hasCells
-      ? minus
-        ? this._totalWidth - count
-        : this._totalWidth + count
-      : count;
-    return this._totalWidth;
+    this._setStore({
+      totalWidth: hasCells ? (minus ? totalWidth - count : totalWidth + count) : count,
+    });
+    return <number>this._getStore("totalWidth");
   }
 
   /**
@@ -782,7 +832,7 @@ class Data {
     this._store.set(data);
   }
 
-  private _getStore(key: string) {
+  private _getStore(key: string | string[]) {
     return this._store.get(key);
   }
 }
