@@ -42,9 +42,11 @@ import { isNumber, isString, isArray, isUndefined } from "util";
 import { deepMerge } from "helpers";
 import { Id_Type } from "types/common.type";
 import Emitter from "./Emitter";
+import Store from "./Store";
 
 interface DataProps_I {
   data: Data_I | SimpleData_I; // 接受Data类型或者多维数组
+  store: Store;
   width: number;
   height: number;
   emitter: Emitter;
@@ -54,6 +56,18 @@ interface ParseOpts_I {
   deep?: number;
   parentIndex?: GlobalIndex_Type;
   parentId?: Id_Type;
+}
+
+interface State_I {
+  viewWidth: number;
+  viewHeight: number;
+  originData: Data_I;
+  viewData: Data_I;
+  currentIndex: GlobalIndex_Type;
+  currentOffsetX: number;
+  currentOffsetY: number;
+  totalHeight: number;
+  totalWidth: number;
 }
 
 class Data {
@@ -74,16 +88,32 @@ class Data {
   private _totalWidth: number; // 列总宽度
 
   private _emitter: Emitter;
+  private _store: Store;
+
+  public state: State_I;
 
   constructor(public props: DataProps_I) {
-    const { data, width, height, emitter } = this.props;
+    const { data, width, height, emitter, store } = this.props;
+
+    this._data = data;
+
+    this.state = {
+      viewHeight: height,
+      viewWidth: width,
+      totalHeight: 0,
+      totalWidth: 0,
+      originData: this._parseData(this._data),
+      viewData: this._parseViewData(this._originData),
+      currentIndex: [0],
+      currentOffsetX: 0,
+      currentOffsetY: 0,
+    };
 
     this._currentOffsetY = 0;
     this._currentOffsetX = 0;
     this._emitter = emitter;
     this._width = width;
     this._height = height;
-    this._data = data;
 
     this._totalHeight = 0;
     this._totalWidth = 0;
@@ -746,6 +776,14 @@ class Data {
     });
 
     return result;
+  }
+
+  private _setStore(data: { [key: string]: any }) {
+    this._store.set(data);
+  }
+
+  private _getStore(key: string) {
+    return this._store.get(key);
   }
 }
 

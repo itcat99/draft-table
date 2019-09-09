@@ -32,6 +32,7 @@ import Text from "components/Text";
 import { Line_I } from "types/plugins/canvas.types";
 import { listenerCount } from "cluster";
 import { format } from "url";
+import Store from "./Store";
 
 class Core {
   public COLLECTIONS: any;
@@ -104,10 +105,12 @@ class Core {
     // 初始化各个模块
     this.EMITTER = new Emitter();
     this.ERR = new Err();
+    this.STORE = new Store({ emitter: this.EMITTER });
     this.PLUGINS = new Plugins({
       err: this.ERR,
       core: this,
       emitter: this.EMITTER,
+      store: this.STORE,
       config: this.config,
     });
 
@@ -148,6 +151,7 @@ class Core {
       height: this.height,
       data: this.config.data,
       emitter: this.EMITTER,
+      store: this.STORE,
     });
 
     this.viewData = this.DATA.get();

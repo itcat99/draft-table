@@ -2,6 +2,7 @@ import Core from "modules/Core";
 import Plugin from "modules/Plugin";
 import Emitter from "modules/Emitter";
 import Err from "modules/Err";
+import Store from "modules/Store";
 
 import { Config_I } from "./common.type";
 
@@ -25,6 +26,7 @@ export interface PluginsProps_I {
   core: Core;
   emitter: Emitter;
   config: Config_I;
+  store: Store;
 }
 
 export type PluginsClasses_Type = Map<string, Plugin_I>;

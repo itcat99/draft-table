@@ -3,13 +3,16 @@ import Emitter from "./Emitter";
 import { Context_I } from "types/common.type";
 import { RenderingData_I, Data_I } from "types/collections.type";
 import { Callback_I } from "types/emitter.type";
+import Store from "./Store";
 
 class Plugin {
   private _emitter: Emitter;
+  private _store: Store;
   public namespace: string;
 
   constructor(public context: Context_I, public options?: any) {
     this._emitter = this.context.emitter;
+    this._store = this.context.store;
     this.namespace = this.options.namespace;
 
     this._listener();
@@ -23,24 +26,38 @@ class Plugin {
    * 设置store内的值
    *
    * @author FreMaNgo
-   * @date 2019-08-06
-   * @param {*} data 更新的值
-   * @param {string} target 目标节点
+   * @date 2019-09-09
+   * @param {string} key
+   * @param {*} data
    * @memberof Plugin
    */
-  setStore(data: any, target: string) {
-    // this.store.set(data, target);
+  setStore(data: { [key: string]: any }) {
+    this._store.set(data);
+  }
+
+  /**
+   * 获取store内的值
+   *
+   * @author FreMaNgo
+   * @date 2019-09-09
+   * @param {string} key
+   * @returns
+   * @memberof Plugin
+   */
+  getStore(key: string) {
+    return this._store.get(key);
   }
 
   /**
    * 当全局Store被更新时触发
    *
    * @author FreMaNgo
-   * @date 2019-08-06
-   * @param {*} nextStore 新的store对象
+   * @date 2019-09-09
+   * @param {{ [key: string]: any }} data 更新的内容
+   * @param {{ [key: string]: any }} nextData 更新后的Store
    * @memberof Plugin
    */
-  didUpdate(nextStore: any) {}
+  didUpdate(data: { [key: string]: any }, nextData: { [key: string]: any }) {}
 
   /**
    * 最终绘制之前，最后一次可以修改绘制结果的函数
