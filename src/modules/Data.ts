@@ -84,7 +84,7 @@ class Data {
   // private _currentOffsetX: number; // 当前横向偏移量
   // private _currentOffsetY: number; // 当前纵向偏移量
 
-  // private _totalHeight: number; // 行总长度
+  private _totalHeight: number; // 行总长度
   // private _totalWidth: number; // 列总宽度
 
   private _emitter: Emitter;
@@ -118,7 +118,7 @@ class Data {
     // this._width = width;
     // this._height = height;
 
-    // this._totalHeight = 0;
+    this._totalHeight = this._getStore("totalHeight");
     // this._totalWidth = 0;
     this._setStore({
       originData: this._parseData(this._data),
@@ -130,10 +130,11 @@ class Data {
     // this._originData = this._parseData(this._data);
     // this._viewData = this._parseViewData(this._originData);
     // this._index = [0];
-    this._setStore({
-      totalWidth: this.updateTotlaWidth(),
-    });
+    this.updateTotlaWidth();
     // this._totalWidth = this.updateTotlaWidth();
+
+    console.log(">>>>> originData <<<<<<<\r", this._getStore("originData"));
+    console.log(">>>>> viewData <<<<<<<\r", this._getStore("viewData"));
   }
 
   /**
@@ -224,13 +225,15 @@ class Data {
       }
 
       const { hidden, size } = _row;
-      const currentTotalHeight = this._getStore("totalHeight");
 
-      if (!dataHidden && !hidden) this._setStore({ totalHeight: currentTotalHeight + size });
+      if (!dataHidden && !hidden) this._totalHeight += size;
 
       result.push(_row);
     }
 
+    this._setStore({
+      totalHeight: this._totalHeight,
+    });
     return result;
   }
 
@@ -299,15 +302,15 @@ class Data {
     const currentIndex = this._getStore("currentIndex");
     if (!currentIndex) this._setStore({ currentIndex: [1] });
 
-    const result = Object.assign({}, data);
-    const { rows, offsetWithViewY } = result;
+    data = Object.assign({}, data);
+    const { rows, offsetWithViewY } = data;
 
     const current = this.getRowByIndex(rows, currentIndex);
 
     // 正向偏移时， 当偏移量小于当前size + 视图纵向偏移 返回当前Data
-    if (offset > 0 && offset < current.size + offsetWithViewY) return result;
+    if (offset > 0 && offset < current.size + offsetWithViewY) return data;
     // 反向偏移时， 当偏移量大于等于当前视图纵向偏移 返回当前Data
-    if (offset < 0 && offset >= offsetWithViewY) return result;
+    if (offset < 0 && offset >= offsetWithViewY) return data;
 
     if (isUndefined(count)) {
       count =
@@ -319,7 +322,7 @@ class Data {
     let next = handler(rows, currentIndex);
     if (!next) {
       // 没有下一个就返回当前的
-      return result;
+      return data;
     }
 
     const { size } = next;
@@ -328,32 +331,35 @@ class Data {
     });
 
     if (size > count) {
-      result.offsetWithViewY = offset >= 0 ? -count : count - size;
+      data.offsetWithViewY = offset >= 0 ? -count : count - size;
       this._setStore({
         originData: {
-          offsetWithViewY: result.offsetWithViewY,
+          offsetWithViewY: data.offsetWithViewY,
         },
       });
     } else if (size === count) {
-      result.offsetWithViewY = 0;
+      data.offsetWithViewY = 0;
       this._setStore({
         originData: {
-          offsetWithViewY: result.offsetWithViewY,
+          offsetWithViewY: data.offsetWithViewY,
         },
       });
     } else {
-      return this._parseViewData(result, offset, count - current.size);
+      return this._parseViewData(data, offset, count - current.size);
     }
 
-    result.rows = this.sliceCell(
+    data.rows = this.sliceCell(
       this.sliceRow({
         currentRow: current,
       }),
     );
+    // data.rows = this.sliceRow({
+    //   currentRow: current,
+    // });
     const originData = <Data_I>this._getStore("originData");
-    result.offsetWithViewX = originData.offsetWithViewX;
-    this._emitter.fire("viewDataChange", [result], "_DATA_");
-    return result;
+    data.offsetWithViewX = originData.offsetWithViewX;
+    this._emitter.fire("viewDataChange", [data], "_DATA_");
+    return data;
   }
 
   /**
@@ -417,16 +423,19 @@ class Data {
    * @memberof Data
    */
   sliceCell(rows: RowData_I[]): RowData_I[] {
-    if (!rows || !rows.length) return rows;
+    const originRows = [].concat(rows);
+
+    if (!originRows || !originRows.length) return originRows;
     const currentOffsetX = this._getStore("currentOffsetX");
     const viewWidth = this._getStore("viewWidth");
 
-    const { cells } = rows[0];
+    const cells = <CellData_I[]>[].concat(originRows[0].cells);
+
     let count = 0,
       start = undefined;
 
     for (let index = 0; index < cells.length; index++) {
-      const { size } = <CellData_I>cells[index];
+      const { size } = cells[index];
       count += size;
 
       if (count > currentOffsetX && isUndefined(start)) {
@@ -439,14 +448,14 @@ class Data {
       }
 
       if (count - currentOffsetX >= viewWidth) {
-        for (let i = 0; i < rows.length; i++) {
-          const row = rows[i];
+        for (let i = 0; i < originRows.length; i++) {
+          const row = originRows[i];
           const { cells } = row;
 
           row.cells = cells.slice(start, index + 1);
         }
 
-        return rows;
+        return originRows;
       }
     }
   }
@@ -799,7 +808,6 @@ class Data {
     this._setStore({
       totalWidth: hasCells ? (minus ? totalWidth - count : totalWidth + count) : count,
     });
-    return <number>this._getStore("totalWidth");
   }
 
   /**

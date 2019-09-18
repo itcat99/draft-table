@@ -56,7 +56,7 @@ class Store {
     if (isArray(key)) {
       const result: { [key: string]: any } = {};
       key.forEach(item => {
-        result[item] = this._data[item];
+        result[item] = this.get(item);
       });
 
       return result;
