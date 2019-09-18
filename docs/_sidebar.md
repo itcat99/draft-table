@@ -14,7 +14,11 @@
   - [scrollbar](/insidePlugins/scrollbar)
 - types
   - [介绍](/types/about)
+  - [style](/types/style)
   - [common](/types/common)
   - [collections](/types/collections)
   - [plugins](/types/plugins)
   - [emitter](/types/emitter)
+  - 内置插件类型定义
+    - [Canvas 插件](/types/plugin/canvas)
+    - [Scrollbar 插件](/types/plugin/scrollbar)

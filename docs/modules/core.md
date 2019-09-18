@@ -30,45 +30,24 @@ const table = new DraftTable();
 
 ## Members/成员
 
-### config
-
-描述：全局配置选项
-
-### COLLECTIONS
-
-描述：`Collections`模块的实例
-
-### STORE
-
-描述：`store`模块的实例
-
-### PLUGINS
-
-描述：`Plugins`模块的实例
-
-### EMITTER
-
-描述：`Emitter`模块的实例
-
-### ERR
-
-描述：`Err`模块的实例
-
-### context
-
-全局上下文，成员为以下：
-
-| name    | desc             |
-| ------- | ---------------- |
-| core    | core 模块实例    |
-| config  | 全局配置选项     |
-| err     | err 模块实例     |
-| emitter | emitter 模块实例 |
-| plugins | plugins 模块实例 |
-
-### pluginInstances
-
-描述：以运行的插件实例集合
+| name          | type            | desc                       |
+| ------------- | --------------- | -------------------------- |
+| config        | Config_I        | 全局配置选项               |
+| COLLECTIONS   | -               | `Collections`模块的实例    |
+| STORE         | Store           | `Store`模块的实例          |
+| PLUGINS       | Plugins         | `Plugins`模块的实例        |
+| EMITTER       | Emitter         | `Emitter`模块的实例        |
+| ERR           | Err             | `Err`模块的实例            |
+| DATA          | Data            | `Data`模块的实例           |
+| canvas        | Canvas          | `Canvas` 内置插件的实例    |
+| scrollbar     | Scrollbar       | `Scrollbar` 内置插件的实例 |
+| width         | number          | canvas 宽度                |
+| height        | number          | canvas 高度                |
+| viewWidth     | number          | 可绘制区域宽度             |
+| viewHeight    | number          | 可绘制区域高度             |
+| data          | Data_I          | 原始集合                   |
+| viewData      | Data_I          | 视图集合                   |
+| renderingData | RenderingData_I | 渲染集合                   |
 
 ## APIs/接口
 
@@ -173,6 +152,90 @@ const table = new DraftTable();
 | ------- | ------ | ------- | -------- | -------------- |
 | name    | string | -       | false    | 插件名称       |
 | options | any    | -       | true     | 插件的配置选项 |
+
+### lockedRow
+
+描述：锁定行
+
+### lockedCol
+
+描述：锁定列
+
+### insertRow
+
+描述：插入行
+
+### insertCol
+
+描述：插入列
+
+### delRow
+
+描述：删除行
+
+### delCol
+
+描述：删除列
+
+### hiddenRow
+
+描述：隐藏行
+
+### hiddenCol
+
+描述：隐藏列
+
+### replaceCell
+
+描述：替换格子
+
+### replaceRow
+
+描述：替换行
+
+### replaceCol
+
+描述：替换列
+
+### mergeCell
+
+描述：合并格子
+
+### mergeCol
+
+描述：合并列
+
+### mergeRow
+
+描述：合并行
+
+### brokenMergeCell
+
+描述：解除合并格子
+
+### brokenMergeRow
+
+描述：解除合并行
+
+### brokenMergeCol
+
+描述：解除合并列
+
+### draw
+
+描述：最终绘制的函数
+
+绘制顺序 line -> rect -> text
+
+方法签名：**(props: RenderingData_I = {}): void**
+
+返回值：无
+
+方法参数：
+
+| name  | type            | default | optional | desc         |
+| ----- | --------------- | ------- | -------- | ------------ |
+| props | RenderingData_I | -       | true     | 最终绘制集合 |
 
 ## Events/事件
 

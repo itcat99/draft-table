@@ -7,24 +7,37 @@ Emitter 事件接口
 ```ts
 interface Event_I {
   type: EventType_Enum;
-  cb: Callback_I;
+  cb: Function;
 }
 ```
 
-## Callback_I
+## Events_I
 
-Emitter 事件回调函数接口
+单个 event 注册的所有事件集合
 
 ```ts
-interface Callback_I {
-  (...props: any[]): void;
+interface Events_I {
+  [key: string]: Event_I[];
 }
 ```
 
-## Events_Type
+## Emitters_I
 
-Emitter 事件集合类型
+所有 Emitter 集合
 
 ```ts
-type Events_Type = Map<string, Event_I>;
+interface Emitters_I {
+  [key: string]: Events_I;
+}
+```
+
+## EventTypes_Enum
+
+Emitter 事件类型枚举
+
+```ts
+enum EventTypes_Enum {
+  ON = "on",
+  ONCE = "once",
+}
 ```

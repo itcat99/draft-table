@@ -36,7 +36,7 @@ import { getSumByRange } from "helpers/calculate";
 
 class Core {
   public COLLECTIONS: any;
-  public STORE: any;
+  public STORE: Store;
   public EMITTER: Emitter;
   public PLUGINS: Plugins;
   public ERR: Err;
@@ -128,7 +128,7 @@ class Core {
     this._listener();
   }
 
-  _initialized() {
+  private _initialized() {
     const { fillStyle } = this.config.style;
     const { width, height, ratio } = this.canvas.getSize();
     this.width = width / ratio;

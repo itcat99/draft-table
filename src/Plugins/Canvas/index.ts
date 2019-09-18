@@ -40,16 +40,6 @@ class Canvas extends Plugin {
   // ============ APIS ===================
   /**
    * 设置ctx的属性，并存在Style集合列表内
-   *
-   * @author FreMaNgo
-   * @date 2019-08-01
-   * @param {Attrs_I} attrs 属性对象
-   * @param {Symbol | string} id 储存的id
-   * @memberof Canvas
-   */
-
-  /**
-   * 设置ctx的属性，并存在Style集合列表内
    * 如果配置了once，则设置的属性只生效一次，完成后设置的属性将会回滚
    * 如果配置了once和id，则生效一次，并回滚到id指定的属性
    *

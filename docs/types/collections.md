@@ -18,7 +18,7 @@ interface Data_I {
   offsetWithViewY?: number;
   parentId?: Id_Type;
   parentIndex?: GlobalIndex_Type;
-  rows?: RowDataArr_Type;
+  rows?: RowData_I[];
   rowSize?: number;
   wrap?: boolean;
 }
@@ -32,8 +32,8 @@ interface Data_I {
 | customStyle     | Function         | -       | Y        | 自定义当前表格的全局的行样式回调函数           |
 | deep            | number           | 0       | Y        | 层级深度                                       |
 | hidden          | boolean          | false   | Y        | 是否隐藏所有行数据                             |
+| offsetWithViewX | number           | 0       | Y        | 首列相对视图区域的横向偏移量                   |
 | offsetWithViewY | number           | 0       | Y        | 首行相对视图区域的纵向偏移量                   |
-| offsetWithViewX | number           | 0       | Y        | 首个格子相对视图区域的横向偏移量               |
 | parentId        | Id_Type          | -       | Y        | 父级行的 Id                                    |
 | parentIndex     | GlobalIndex_Type | -       | Y        | 父级在全局的索引，如果没有此项，则视为`根表格` |
 | rows            | RowData_I[]      | []      | Y        | 行集合                                         |
@@ -65,7 +65,7 @@ interface SimpleData_I {
 ### 概览
 
 ```ts
-RowData_I {
+interface RowData_I {
   cells?: CellDataArr_Type;
   children?: Data_I;
   customStyle?: Function;
@@ -137,3 +137,80 @@ interface CellData_I {
 | type    | CellType_Enum     | "text"   | Y        | 格子类型                         |
 | value   | CellValue_Type    | ""       | Y        | 格子内容                         |
 | wrap    | boolean           | false    | Y        | 格子的文字是否折行               |
+
+## RenderingData_I
+
+渲染集合接口
+
+### 概览
+
+```ts
+interface RenderingData_I {
+  line?: FinalCollection_I<LineStyle_I, Line>[];
+  rect?: FinalCollection_I<RectStyle_I, Rect>[];
+  text?: FinalCollection_I<TextStyle_I, Text>[];
+}
+```
+
+### 详细定义
+
+| name | type                                   | default | optional | desc               |
+| ---- | -------------------------------------- | ------- | -------- | ------------------ |
+| line | FinalCollection_I<LineStyle_I, Line>[] | -       | true     | 线条的最终绘制集合 |
+| rect | FinalCollection_I<RectStyle_I, Rect>[] | -       | true     | 矩形的最终绘制集合 |
+| text | FinalCollection_I<TextStyle_I, Text>[] | -       | true     | 文字的最终绘制集合 |
+
+## FinalCollection_I
+
+最终绘制的`Line`,`Rect`,`Text`集合的结构
+
+### 概览
+
+```ts
+interface FinalCollection_I<T, M> {
+  data: M[];
+  style: T;
+}
+```
+
+### 详细定义
+
+| name  | type | default | optional | desc                   |
+| ----- | ---- | ------- | -------- | ---------------------- |
+| data  | M[]  | -       | false    | 绘制的实例数组         |
+| style | T    | -       | false    | 当前绘制实例的样式定义 |
+
+## CellType_Enum
+
+格子类型枚举
+
+```ts
+enum CellType_Enum {
+  PLUGIN = "plugin", // 插件类型
+  TEXT = "text", // 文本类型
+}
+```
+
+## CellValue_Type
+
+格子内值的类型
+
+```ts
+type CellValue_Type = Plugin | string | undefined | null | number;
+```
+
+## CellDataArr_Type
+
+格子集合的类型
+
+```ts
+type CellDataArr_Type = string[] | number[] | Array<CellData_I>;
+```
+
+## GlobalIndex_Type
+
+全局索引的类型
+
+```ts
+type GlobalIndex_Type = number[];
+```

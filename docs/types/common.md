@@ -10,20 +10,18 @@ interface Config_I {
   target: HTMLCanvasElement | HTMLElement;
   width: number;
   height: number;
-  ratio: number;
-  strokeStyle: string;
-  fillStyle: string;
-  fontStyle: string;
-  fontVariant: string;
-  fontStretch: string;
-  fontWeight: number;
-  fontSize: number;
-  fontFamily: string;
-  lineHeight: number; // 字体的行高
-  lineWidth: number; // 线的宽度
-  textAlign: TextAlign_Enum;
-  textBaseline: TextBaseline_Enum;
+  ratio?: number;
+  font?: Font_I;
+  style?: Style_I;
   plugins?: PluginCollection_I;
+  scrollbar?: ScrollbarProps_I;
+  row?: number; // 行数量
+  col?: number; // 列数量
+  rowSize?: number; // 行高
+  colSize?: number; // 列宽
+  extraColCount: number; // 额外渲染的列数量
+  extraRowCount: number; // 额外渲染的行数量
+  data?: Data_I; // 元数据
 }
 ```
 
@@ -34,6 +32,17 @@ interface Config_I {
 ```ts
 interface Context_I extends PluginsProps_I {
   plugins: Plugins;
+}
+```
+
+## ComponentProps_I
+
+特指`Line`,`Rect`,`Text` component 的传入 props 接口
+
+```ts
+interface ComponentProps_I {
+  id?: Id_Type;
+  [key: string]: any;
 }
 ```
 
@@ -68,8 +77,16 @@ enum TextBaseline_Enum {
 
 ## Pos_Type
 
-坐标的类型
+定义坐标的类型
 
 ```ts
 type Pos_Type = [number, number];
+```
+
+## Id_Type
+
+定义 ID 的类型
+
+```ts
+type Id_Type = Symbol | string | number;
 ```
